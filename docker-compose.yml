@@ -58,8 +58,8 @@ services:
       context: ./web/backend
       dockerfile: Dockerfile
     container_name: picoforge-backend
-    ports:
-      - "3000:3000"
+    # ports:
+    #   - "3000"
     volumes:
       - ./workspace:/app/workspace
       - /var/run/docker.sock:/var/run/docker.sock
