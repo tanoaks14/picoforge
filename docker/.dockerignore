@@ -1,0 +1,29 @@
+# Build artifacts
+**/build/
+**/dist/
+**/.cmake/
+**/CMakeFiles/
+**/CMakeCache.txt
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Git
+.git/
+.gitignore
+
+# Documentation
+docs/
+*.md
+!README.md
+
+# Tests (copied separately)
+**/tests/
+
+# OS
+.DS_Store
+Thumbs.db

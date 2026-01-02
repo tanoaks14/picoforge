@@ -1,0 +1,32 @@
+{
+    "version": "1.0",
+    "project_name": "sample_uart_i2c_spi",
+    "uart": [
+        {
+            "id": 0,
+            "baud": 115200,
+            "tx_pin": 0,
+            "rx_pin": 1,
+            "parity": "none"
+        }
+    ],
+    "i2c": [
+        {
+            "id": 1,
+            "sda": 18,
+            "scl": 19,
+            "speed_hz": 400000,
+            "pullups": true
+        }
+    ],
+    "spi": [
+        {
+            "id": 0,
+            "sck": 2,
+            "mosi": 3,
+            "miso": 4,
+            "speed_hz": 8000000,
+            "mode": 0
+        }
+    ]
+}

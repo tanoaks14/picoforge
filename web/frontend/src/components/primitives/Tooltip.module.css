@@ -1,0 +1,27 @@
+.trigger {
+    position: relative;
+    display: inline-flex;
+}
+
+.bubble {
+    position: absolute;
+    bottom: calc(100% + 8px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--color-surface-strong);
+    color: var(--color-text);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    padding: 8px 10px;
+    box-shadow: var(--shadow-md);
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 120ms ease, transform 120ms ease;
+    font-size: 13px;
+}
+
+.visible {
+    opacity: 1;
+    transform: translateX(-50%) translateY(-2px);
+}

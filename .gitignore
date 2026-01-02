@@ -1,0 +1,74 @@
+# Build artifacts
+pico-forge/build/
+pico-forge/dist/
+web/backend/node_modules/
+web/frontend/node_modules/
+web/backend/dist/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Docker
+.docker-cache/
+
+# Environment
+.env
+.env.local
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Workspace projects
+workspace/*
+!workspace/.gitkeep
+
+# CMake
+**/CMakeFiles/
+**/CMakeCache.txt
+**/*.cmake
+!**/CMakeLists.txt
+**/Makefile
+!./Makefile
+
+# C++ build artifacts
+*.o
+*.a
+*.so
+*.exe
+*.out
+
+# Planning documents
+.planning/
+
+# Documentation and Status Reports
+COMPLETE-FILE-MANIFEST.md
+COMPLETE-TEST-SUITE.md
+CROSS_PLATFORM_DEV.md
+DELIVERY_SUMMARY.md
+DEVELOPMENT.md
+DOCUMENTATION-INDEX.md
+DOCUMENTATION-MAP.md
+FINAL-STATUS.md
+INDEX.md
+PHASE-2-COMPLETION.md
+PICOFORGE-FEATURE-OVERVIEW.md
+PLANNING_COMPLETE.md
+PROJECT-STATUS.md
+preface.md
+QUICK_REFERENCE.md
+QUICK-START.md
+README.md
+SESSION-COMPLETION-SUMMARY.md
+START_HERE.md
+SYSTEM-ARCHITECTURE-DIAGRAMS.md
+TEMPLATE-TESTS-COMPLETION.md
+UI-ENHANCEMENT-SUMMARY.md

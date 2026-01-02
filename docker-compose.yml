@@ -1,0 +1,88 @@
+services:
+  # Development environment for PicoForge
+  pico-forge-dev:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.dev
+    container_name: picoforge-dev
+    volumes:
+      # Mount source code for live development
+      - ./pico-forge:/workspace/pico-forge
+      - ./workspace:/workspace/projects
+      # Cache build artifacts
+      - picoforge-build-cache:/workspace/pico-forge/build
+    working_dir: /workspace/pico-forge
+    environment:
+      - CMAKE_BUILD_TYPE=Debug
+      - FIXTURES_PATH=/workspace/pico-forge/tests/fixtures
+    command: /bin/bash -c "tail -f /dev/null"
+    stdin_open: true
+    tty: true
+
+  # Test runner service
+  pico-forge-test:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.dev
+    container_name: picoforge-test
+    volumes:
+      - ./pico-forge:/workspace/pico-forge
+      - picoforge-test-cache:/workspace/pico-forge/build
+    working_dir: /workspace/pico-forge
+    environment:
+      - CMAKE_BUILD_TYPE=Debug
+      - FIXTURES_PATH=/workspace/pico-forge/tests/fixtures
+    entrypoint: [ "/bin/bash", "-c" ]
+    command:
+      - |
+        echo 'Building PicoForge...' &&
+        mkdir -p build && cd build &&
+        cmake .. -DCMAKE_BUILD_TYPE=Debug &&
+        make -j$$(nproc) &&
+        echo '' &&
+        echo '========================================' &&
+        echo 'Running Unit Tests' &&
+        echo '========================================' &&
+        ./pico-forge-tests &&
+        echo '' &&
+        echo '========================================' &&
+        echo 'Running Integration Tests' &&
+        echo '========================================' &&
+        ./pico-forge-integration-tests &&
+        echo '' &&
+        echo '✅ All tests passed!'
+
+  # Backend API
+  backend:
+    build:
+      context: ./web/backend
+      dockerfile: Dockerfile
+    container_name: picoforge-backend
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./workspace:/app/workspace
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./web/backend:/app
+    environment:
+      - NODE_ENV=development
+      - PORT=3000
+      - WORKSPACE_PATH=/app/workspace
+      - HOST_WORKSPACE_PATH=d:/apps/picoforge/workspace
+    depends_on:
+      - pico-forge-dev
+
+  # Frontend UI
+  frontend:
+    build:
+      context: ./web/frontend
+      dockerfile: Dockerfile
+    container_name: picoforge-frontend
+    ports:
+      - "8080:80"
+    depends_on:
+      - backend
+
+volumes:
+  picoforge-build-cache:
+  picoforge-test-cache:

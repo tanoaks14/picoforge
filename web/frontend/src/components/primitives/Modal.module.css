@@ -1,0 +1,45 @@
+.overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(5, 8, 20, 0.72);
+    backdrop-filter: blur(6px);
+    display: grid;
+    place-items: center;
+    z-index: 80;
+}
+
+.content {
+    width: min(520px, 90vw);
+    background: var(--color-surface-strong);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg);
+    padding: 20px;
+    color: var(--color-text);
+}
+
+.header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 12px;
+}
+
+.title {
+    font-weight: 700;
+    font-size: 18px;
+    letter-spacing: -0.02em;
+}
+
+.body {
+    color: var(--color-text);
+    line-height: 1.55;
+}
+
+.footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 18px;
+}

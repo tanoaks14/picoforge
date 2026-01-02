@@ -1,0 +1,42 @@
+# Development Docker image for PicoForge
+# Includes build tools for ARM Cortex-M
+
+FROM debian:bookworm-slim
+
+# Prevent interactive prompts during package installation
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Install dependencies and ARM toolchain in one layer to reduce size
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    cmake \
+    git \
+    wget \
+    python3 \
+    gcc-arm-none-eabi \
+    libnewlib-arm-none-eabi \
+    libstdc++-arm-none-eabi-newlib \
+    ninja-build \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+ENV PICO_SDK_PATH=/opt/pico-sdk
+
+# Clone Pico SDK (shallow clone)
+RUN git clone --depth 1 --branch master https://github.com/raspberrypi/pico-sdk.git ${PICO_SDK_PATH} && \
+    cd ${PICO_SDK_PATH} && \
+    git submodule update --init --depth 1
+
+
+# Set up working directory
+WORKDIR /workspace
+
+# Set C++ standard and compiler flags
+ENV CMAKE_CXX_STANDARD=17
+ENV CMAKE_BUILD_TYPE=Debug
+
+# Create directories for build artifacts
+RUN mkdir -p /workspace/build /workspace/output
+
+# Default command: bash for interactive development
+CMD ["/bin/bash"]

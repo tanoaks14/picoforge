@@ -1,0 +1,59 @@
+{
+    "project": {
+        "name": "pico_sample",
+        "version": "1.0.0"
+    },
+    "modules": [
+        {
+            "type": "gpio",
+            "id": "led",
+            "config": {
+                "pin": 25,
+                "direction": "out",
+                "initial": "low"
+            }
+        },
+        {
+            "type": "pwm",
+            "id": "servo",
+            "config": {
+                "pin": 15,
+                "frequency": 50,
+                "duty_cycle": 7.5
+            }
+        },
+        {
+            "type": "adc",
+            "id": "temp_sensor",
+            "config": {
+                "channel": 4,
+                "read_temp": true
+            }
+        },
+        {
+            "type": "uart",
+            "id": "debug_uart",
+            "config": {
+                "instance": 0,
+                "baud_rate": 115200,
+                "tx_pin": 0,
+                "rx_pin": 1
+            }
+        },
+        {
+            "type": "i2c",
+            "id": "sensor_bus",
+            "config": {
+                "instance": 0,
+                "sda_pin": 4,
+                "scl_pin": 5,
+                "speed": 400000
+            }
+        }
+    ],
+    "build": {
+        "board": "pico",
+        "sdk_path": "/pico-sdk",
+        "output_dir": "build"
+    }
+}

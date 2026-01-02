@@ -1,0 +1,32 @@
+.preview {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+}
+
+.titleRow {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.meta {
+    color: var(--color-muted);
+    font-size: 13px;
+}
+
+.code {
+    background: var(--color-surface-strong);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    padding: 12px;
+    font-family: 'JetBrains Mono', 'Fira Code', 'Space Mono', monospace;
+    font-size: 13px;
+    color: var(--color-text);
+}
+
+.actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 8px;
+}
