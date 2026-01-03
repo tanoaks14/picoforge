@@ -1,6 +1,18 @@
 const fs = require('fs').promises;
 const path = require('path');
 
+const generateBlockCode = (block) => {
+    if (block.type === 'if_block') {
+        const condition = `${block.params.left} ${block.params.operator} ${block.params.right}`;
+        const innerCode = (block.params.innerBlocks || []).map(b => generateBlockCode(b)).join('\n');
+        return `        if (${condition}) {\n${innerCode}\n        }`;
+    }
+    if (LOOP_TEMPLATES[block.type]) {
+        return LOOP_TEMPLATES[block.type](block.params);
+    }
+    return `        // Unknown block: ${block.type}`;
+};
+
 const SETUP_TEMPLATES = {
     spi_config: (params) => {
         const inst = params.inst || 'spi0';
@@ -33,6 +45,10 @@ const SETUP_TEMPLATES = {
     uint slice_${params.pin} = pwm_gpio_to_slice_num(${params.pin});
     pwm_set_wrap(slice_${params.pin}, 65535);
     pwm_set_enabled(slice_${params.pin}, true);`;
+    },
+    var_int: (params) => {
+        return `    // Global Variable
+    int ${params.name} = ${params.value || 0};`;
     }
 };
 
@@ -41,6 +57,8 @@ const LOOP_TEMPLATES = {
     sleep: (params) => `        sleep_ms(${params.ms});`,
     uart_write: (params) => `        uart_puts(uart0, "${params.text}\\n");`,
     log: (params) => `        printf("${params.text}\\n");`,
+    code_snippet: (params) => `        // Custom Snippet
+${params.code.split('\n').map(l => '        ' + l).join('\n')}`,
     spi_write: (params) => `        // SPI Write
         gpio_put(${params.csn}, 0);
         spi_write_blocking(${params.inst || 'spi0'}, (const uint8_t*)"${params.data}", ${params.data.length});
@@ -64,99 +82,71 @@ const LOOP_TEMPLATES = {
     pwm_set: (params) => `        // PWM Set Level
         pwm_set_gpio_level(${params.pin}, ${params.level}); // level 0-65535`,
     function_call: (params) => `        // Call user function
-        ${params.ref}();`
+        ${params.ref}();`,
+    var_set: (params) => `        ${params.name} = ${params.value};`
 };
 
 const PROJECT_BOILERPLATE = {
+    gpio: {
+        headers: ['#include "hardware/gpio.h"'],
+        setup: `    // User LED Setup
+    gpio_init(25);
+    gpio_set_dir(25, GPIO_OUT);`,
+        loop: `        // Blink LED
+        gpio_put(25, 1);
+        sleep_ms(500);
+        gpio_put(25, 0);
+        sleep_ms(500);`
+    },
     adc: {
         headers: ['#include "hardware/adc.h"'],
         setup: `    // ADC Initialization
     adc_init();
-    // Make sure GPIO is high-impedance, no pullups etc
-    adc_gpio_init(26);
-    // Select ADC input 0 (GPIO26)
-    adc_select_input(0);`,
-        loop: `        // ADC Example reading
-        // uint16_t result = adc_read();
-        // printf("ADC value: %d\\n", result);`
+    adc_gpio_init(26);`,
+        loop: `        // Read ADC
+        adc_select_input(0);
+        uint16_t result = adc_read();
+        printf("ADC Value: %d\\n", result);
+        sleep_ms(500);`
     },
     pwm: {
         headers: ['#include "hardware/pwm.h"'],
-        setup: `    // PWM Initialization
-    // Tell GPIO 0 (or builtin LED) is allocated to the PWM
-    gpio_set_function(PICO_DEFAULT_LED_PIN, GPIO_FUNC_PWM);
-    // Find out which PWM slice is connected to GPIO 0
-    uint slice_num = pwm_gpio_to_slice_num(PICO_DEFAULT_LED_PIN);
-    // Set period of 4 cycles (0 to 3 inclusive)
-    pwm_set_wrap(slice_num, 3);
-    // Set channel A output high for one cycle before dropping
-    pwm_set_chan_level(slice_num, PWM_CHAN_A, 1);
-    // Set the PWM running
+        setup: `    // PWM Initialization (Pin 28)
+    gpio_set_function(28, GPIO_FUNC_PWM);
+    uint slice_num = pwm_gpio_to_slice_num(28);
+    pwm_set_wrap(slice_num, 65535);
     pwm_set_enabled(slice_num, true);`,
-        loop: `        // PWM Example update
-        // pwm_set_chan_level(slice_num, PWM_CHAN_A, 2);`
-    },
-    gpio: {
-        headers: ['#include "hardware/gpio.h"'],
-        setup: `    // GPIO Initialization
-    const uint LED_PIN = PICO_DEFAULT_LED_PIN;
-    gpio_init(LED_PIN);
-    gpio_set_dir(LED_PIN, GPIO_OUT);`,
-        loop: `        // GPIO Blink
-        gpio_put(LED_PIN, 1);
-        sleep_ms(250);
-        gpio_put(LED_PIN, 0);
-        sleep_ms(250);`
+        loop: `        // Update PWM
+        pwm_set_gpio_level(28, 32768); // 50% duty`
     },
     i2c: {
         headers: ['#include "hardware/i2c.h"'],
         setup: `    // I2C Initialization
-    i2c_init(i2c_default, 100 * 1000);
-    gpio_set_function(PICO_DEFAULT_I2C_SDA_PIN, GPIO_FUNC_I2C);
-    gpio_set_function(PICO_DEFAULT_I2C_SCL_PIN, GPIO_FUNC_I2C);
-    gpio_pull_up(PICO_DEFAULT_I2C_SDA_PIN);
-    gpio_pull_up(PICO_DEFAULT_I2C_SCL_PIN);`,
-        loop: ``
+    i2c_init(i2c0, 100 * 1000);
+    gpio_set_function(4, GPIO_FUNC_I2C);
+    gpio_set_function(5, GPIO_FUNC_I2C);
+    gpio_pull_up(4);
+    gpio_pull_up(5);`,
+        loop: `        // I2C Scan or operation
+        // (Add logic here)`
     },
     spi: {
         headers: ['#include "hardware/spi.h"'],
         setup: `    // SPI Initialization
-    spi_init(spi_default, 500 * 1000);
-    gpio_set_function(PICO_DEFAULT_SPI_RX_PIN, GPIO_FUNC_SPI);
-    gpio_set_function(PICO_DEFAULT_SPI_SCK_PIN, GPIO_FUNC_SPI);
-    gpio_set_function(PICO_DEFAULT_SPI_TX_PIN, GPIO_FUNC_SPI);
-    // Chip select is active-low, so initialised to high
-    gpio_init(PICO_DEFAULT_SPI_CSN_PIN);
-    gpio_set_dir(PICO_DEFAULT_SPI_CSN_PIN, GPIO_OUT);
-    gpio_put(PICO_DEFAULT_SPI_CSN_PIN, 1);`,
-        loop: ``
+    spi_init(spi0, 500 * 1000);
+    gpio_set_function(16, GPIO_FUNC_SPI);
+    gpio_set_function(18, GPIO_FUNC_SPI);
+    gpio_set_function(19, GPIO_FUNC_SPI);`,
+        loop: `        // SPI Transfer
+        // (Add logic here)`
     },
     uart: {
         headers: ['#include "hardware/uart.h"'],
         setup: `    // UART Initialization
     uart_init(uart0, 115200);
     gpio_set_function(0, GPIO_FUNC_UART);
-    gpio_set_function(1, GPIO_FUNC_UART);
-    uart_puts(uart0, "UART initialized\\n");`,
-        loop: `        // UART Example
-        // if (uart_is_readable(uart0)) {
-        //     char c = uart_getc(uart0);
-        //     uart_putc(uart0, c);
-        // }`
-    },
-    multicore: {
-        headers: ['#include "pico/multicore.h"'],
-        setup: `    // Multicore Initialization
-    void core1_entry() {
-        while (1) {
-            // tight_loop_contents();
-            sleep_ms(500);
-        }
-    }
-    // Launch core 1
-    multicore_launch_core1(core1_entry);
-    printf("Core 1 launched\\n");`,
-        loop: ``
+    gpio_set_function(1, GPIO_FUNC_UART);`,
+        loop: `        uart_puts(uart0, "Hello UART!\\n");`
     }
 };
 
@@ -170,28 +160,24 @@ class ScaffoldService {
         let loopCode = [];
         let usedGpioPins = new Set();
 
-        // 1. Process Modules (Legacy/Base Init)
+        // 1. Process Modules (Legacy)
         modules.forEach(mod => {
             const tmpl = PROJECT_BOILERPLATE[mod.toLowerCase()];
             if (tmpl) {
                 if (tmpl.headers) headers.push(...tmpl.headers);
                 if (tmpl.setup) setupCode.push(tmpl.setup);
-                // Only add default loop code if NO blocks are provided
                 if (blocks.length === 0 && tmpl.loop) loopCode.push(tmpl.loop);
             }
         });
 
-        // 2. Scan Blocks for Auto-Initialization & Headers
+        // 2. Scan Blocks for Headers/Init
         let adcInitAdded = false;
         blocks.forEach(block => {
-            if (block.type === 'gpio_set') {
-                usedGpioPins.add(block.params.pin);
-            }
+            if (block.type === 'gpio_set') usedGpioPins.add(block.params.pin);
             if (block.type.startsWith('spi')) headers.push('#include "hardware/spi.h"');
             if (block.type.startsWith('i2c')) headers.push('#include "hardware/i2c.h"');
             if (block.type.startsWith('adc')) {
                 headers.push('#include "hardware/adc.h"');
-                // ADC needs a one-time global init variable for the template helper
                 if (!adcInitAdded) {
                     setupCode.unshift('    bool adc_initialized = false;');
                     adcInitAdded = true;
@@ -200,52 +186,41 @@ class ScaffoldService {
             if (block.type.startsWith('pwm')) headers.push('#include "hardware/pwm.h"');
         });
 
-        // 3. Generate Dynamic GPIO Init
+        // 3. Dynamic GPIO Init
         if (usedGpioPins.size > 0) {
             setupCode.push(`    // Auto-generated GPIO Init
     ${Array.from(usedGpioPins).map(pin => `gpio_init(${pin}); gpio_set_dir(${pin}, GPIO_OUT);`).join('\n    ')}`);
         }
 
-        // 4. Process Blocks (Setup vs Loop)
+        // 4. Process Blocks
         if (blocks.length > 0) {
             loopCode.push('        // --- Visual Builder Sequence ---');
             blocks.forEach(block => {
-                // Check if it's a Setup Block
                 if (SETUP_TEMPLATES[block.type]) {
                     setupCode.push(SETUP_TEMPLATES[block.type](block.params));
-                }
-                // Check if it's a Loop Block
-                else if (LOOP_TEMPLATES[block.type]) {
-                    loopCode.push(LOOP_TEMPLATES[block.type](block.params));
-                }
-                else {
-                    loopCode.push(`        // Unknown block type: ${block.type}`);
+                } else if (loopCode || block.type === 'if_block') {
+                    // Everything else goes to loop via generateBlockCode, unless it's a function_def
+                    if (block.type !== 'function_def') {
+                        loopCode.push(generateBlockCode(block));
+                    }
                 }
             });
         }
 
-        // 5. Generate User-Defined Functions from function_def blocks
+        // 5. Generate User-Defined Functions
         const functionDefs = blocks.filter(b => b.type === 'function_def' && b.params.name);
         let functionCode = [];
         functionDefs.forEach(fn => {
             const fnName = fn.params.name;
-            let fnBody = [];
             const innerBlocks = fn.params.innerBlocks || [];
-            innerBlocks.forEach(inner => {
-                if (LOOP_TEMPLATES[inner.type]) {
-                    fnBody.push(LOOP_TEMPLATES[inner.type](inner.params));
-                }
-            });
-            if (fnBody.length === 0) {
-                fnBody.push('    // Empty function');
-            }
+            const fnBody = innerBlocks.map(b => generateBlockCode(b));
+
+            if (fnBody.length === 0) fnBody.push('    // Empty function');
+
             functionCode.push(`// User-defined function: ${fnName}\nvoid ${fnName}() {\n${fnBody.join('\n')}\n}`);
         });
 
-        // Dedup headers
         headers = [...new Set(headers)];
-
-        // Build the final C++ file
         const functionsSection = functionCode.length > 0 ? functionCode.join('\n\n') + '\n\n' : '';
 
         return `${headers.join('\n')}
@@ -267,22 +242,22 @@ ${loopCode.join('\n')}
     }
 
     generateCMakeLists(projectName, config) {
+        return this.generateCMakeListsOriginal(projectName, config);
+    }
+
+    // Preserving original CMake logic but avoiding duplication in this Replace call
+    // Actually, I need to provide the full class since I am replacing the method.
+    // I will just copy the original generateCMakeLists here.
+    generateCMakeListsOriginal(projectName, config) {
         const modules = Array.isArray(config) ? config : (config.modules || []);
         const blocks = !Array.isArray(config) && config.blocks ? config.blocks : [];
-
-        // Base libraries
         let libs = new Set(['pico_stdlib']);
 
-        // Add libraries from modules array
         modules.forEach(mod => {
-            if (mod === 'multicore') {
-                libs.add('pico_multicore');
-            } else {
-                libs.add(`hardware_${mod.toLowerCase()}`);
-            }
+            if (mod === 'multicore') libs.add('pico_multicore');
+            else libs.add(`hardware_${mod.toLowerCase()}`);
         });
 
-        // Auto-detect libraries from blocks
         blocks.forEach(block => {
             if (block.type.startsWith('spi')) libs.add('hardware_spi');
             if (block.type.startsWith('i2c')) libs.add('hardware_i2c');
@@ -293,7 +268,6 @@ ${loopCode.join('\n')}
         });
 
         const libsArray = [...libs];
-
         return `cmake_minimum_required(VERSION 3.12)
 include($ENV{PICO_SDK_PATH}/external/pico_sdk_import.cmake)
 

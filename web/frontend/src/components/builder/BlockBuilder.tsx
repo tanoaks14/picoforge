@@ -9,7 +9,7 @@ import Input from '../primitives/Input';
 
 export type Block = {
     id: string;
-    type: 'gpio_set' | 'sleep' | 'uart_write' | 'log' | 'spi_config' | 'i2c_config' | 'spi_write' | 'spi_read' | 'i2c_write' | 'i2c_read' | 'adc_config' | 'pwm_config' | 'adc_read' | 'pwm_set' | 'function_def' | 'function_call';
+    type: 'gpio_set' | 'sleep' | 'uart_write' | 'log' | 'spi_config' | 'i2c_config' | 'spi_write' | 'spi_read' | 'i2c_write' | 'i2c_read' | 'adc_config' | 'pwm_config' | 'adc_read' | 'pwm_set' | 'function_def' | 'function_call' | 'if_block' | 'var_int' | 'var_set' | 'code_snippet';
     params: any;
 };
 
@@ -62,6 +62,7 @@ const SortableBlock = ({
     availablePwmPins,
     availableAdcPins,
     availableFunctions,
+    availableVars,
     pinUsage
 }: {
     block: Block;
@@ -72,6 +73,7 @@ const SortableBlock = ({
     availablePwmPins: number[];
     availableAdcPins: number[];
     availableFunctions: string[];
+    availableVars: string[];
     pinUsage: Map<number, string[]>;
 }) => {
     const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: block.id });
@@ -423,13 +425,100 @@ const SortableBlock = ({
                                         </div>
                                     ))}
 
-                                    {/* Add Inner Block Buttons - All Loop Actions */}
                                     <div style={{ display: 'flex', gap: '4px', marginTop: '10px', flexWrap: 'wrap' }}>
                                         <button onClick={() => addInnerBlock('gpio_set')} style={{ padding: '3px 8px', fontSize: '0.75em', background: 'var(--color-primary)', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>+GPIO</button>
                                         <button onClick={() => addInnerBlock('sleep')} style={{ padding: '3px 8px', fontSize: '0.75em', background: 'var(--color-primary)', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>+Wait</button>
                                         <button onClick={() => addInnerBlock('log')} style={{ padding: '3px 8px', fontSize: '0.75em', background: 'var(--color-primary)', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>+Log</button>
                                         {availableSpi.length > 0 && <button onClick={() => addInnerBlock('spi_write')} style={{ padding: '3px 8px', fontSize: '0.75em', background: 'var(--color-primary)', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>+SPI</button>}
                                         {availableI2c.length > 0 && <button onClick={() => addInnerBlock('i2c_write')} style={{ padding: '3px 8px', fontSize: '0.75em', background: 'var(--color-primary)', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>+I2C</button>}
+                                        {/* Variables in Inner Blocks */}
+                                        {availableVars.length > 0 && <button onClick={() => addInnerBlock('var_set')} style={{ padding: '3px 8px', fontSize: '0.75em', background: 'var(--color-primary)', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>+Var</button>}
+                                    </div>
+                                </div>
+                            </div>
+                        );
+                    })()}
+
+                    {/* Var Int (Setup) */}
+                    {block.type === 'var_int' && (
+                        <>
+                            <span style={{ fontWeight: 'bold', fontFamily: 'monospace' }}>int</span>
+                            <input placeholder="varName" value={block.params.name} onChange={e => onChange(block.id, { ...block.params, name: e.target.value.replace(/[^a-zA-Z0-9_]/g, '') })} style={inputStyle} />
+                            <span>=</span>
+                            <input type="number" placeholder="0" value={block.params.value} onChange={e => onChange(block.id, { ...block.params, value: Number(e.target.value) })} style={{ ...inputStyle, width: '60px' }} />
+                        </>
+                    )}
+
+                    {/* Var Set (Loop) */}
+                    {block.type === 'var_set' && (
+                        <>
+                            <select value={block.params.name} onChange={e => onChange(block.id, { ...block.params, name: e.target.value })} style={inputStyle}>
+                                {availableVars.map(v => <option key={v} value={v}>{v}</option>)}
+                            </select>
+                            <span>=</span>
+                            <input placeholder="val/expr" value={block.params.value} onChange={e => onChange(block.id, { ...block.params, value: e.target.value })} style={{ ...inputStyle, width: '80px' }} />
+                        </>
+                    )}
+
+                    {/* Custom Code Snippet */}
+                    {block.type === 'code_snippet' && (
+                        <div style={{ width: '100%' }}>
+                            <textarea
+                                placeholder="// Enter C++ code here..."
+                                value={block.params.code}
+                                onChange={e => onChange(block.id, { ...block.params, code: e.target.value })}
+                                style={{ ...inputStyle, width: '100%', fontFamily: 'monospace', minHeight: '60px', fontSize: '12px' }}
+                            />
+                        </div>
+                    )}
+
+                    {/* If Logic Block */}
+                    {block.type === 'if_block' && (() => {
+                        const innerBlocks = block.params.innerBlocks || [];
+                        const addInnerBlock = (type: string) => {
+                            let params: any = {};
+                            if (type === 'gpio_set') params = { pin: 25, level: 1 };
+                            if (type === 'sleep') params = { ms: 250 };
+                            if (type === 'log') params = { text: 'Hello' };
+                            if (type === 'var_set') params = { name: availableVars[0] || 'x', value: 0 };
+                            const newInner = { id: crypto.randomUUID(), type, params };
+                            onChange(block.id, { ...block.params, innerBlocks: [...innerBlocks, newInner] });
+                        };
+                        const updateInnerBlock = (innerId: string, newParams: any) => {
+                            const updated = innerBlocks.map((b: any) => b.id === innerId ? { ...b, params: newParams } : b);
+                            onChange(block.id, { ...block.params, innerBlocks: updated });
+                        };
+                        const removeInnerBlock = (innerId: string) => {
+                            onChange(block.id, { ...block.params, innerBlocks: innerBlocks.filter((b: any) => b.id !== innerId) });
+                        };
+                        return (
+                            <div style={{ width: '100%' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                                    <span style={{ fontWeight: 'bold' }}>IF</span>
+                                    <input placeholder="Left" value={block.params.left} onChange={e => onChange(block.id, { ...block.params, left: e.target.value })} style={{ ...inputStyle, width: '60px' }} />
+                                    <select value={block.params.operator} onChange={e => onChange(block.id, { ...block.params, operator: e.target.value })} style={inputStyle}>
+                                        <option value="==">==</option>
+                                        <option value="!=">!=</option>
+                                        <option value=">">&gt;</option>
+                                        <option value="<">&lt;</option>
+                                    </select>
+                                    <input placeholder="Right" value={block.params.right} onChange={e => onChange(block.id, { ...block.params, right: e.target.value })} style={{ ...inputStyle, width: '60px' }} />
+                                </div>
+
+                                <div style={{ marginLeft: '12px', borderLeft: '2px dashed var(--color-primary)', paddingLeft: '12px' }}>
+                                    {innerBlocks.map((inner: any, idx: number) => (
+                                        <div key={inner.id} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '6px', background: 'rgba(0,0,0,0.1)', borderRadius: '4px', marginBottom: '6px' }}>
+                                            <span style={{ marginLeft: 'auto', fontSize: '0.8em', fontWeight: 'bold' }}>{inner.type.toUpperCase()}</span>
+                                            {/* Simple controls for inner blocks */}
+                                            {inner.type === 'gpio_set' && <input type="number" value={inner.params.pin} onChange={e => updateInnerBlock(inner.id, { ...inner.params, pin: +e.target.value })} style={{ ...inputStyle, width: '40px' }} />}
+                                            {inner.type === 'var_set' && <input type="number" value={inner.params.value} onChange={e => updateInnerBlock(inner.id, { ...inner.params, value: +e.target.value })} style={{ ...inputStyle, width: '60px' }} />}
+                                            <button onClick={() => removeInnerBlock(inner.id)} style={{ color: 'var(--color-danger)', border: 'none', background: 'none' }}>×</button>
+                                        </div>
+                                    ))}
+                                    <div style={{ marginTop: '8px', display: 'flex', gap: '4px' }}>
+                                        <button onClick={() => addInnerBlock('gpio_set')} style={{ fontSize: '0.7em', padding: '2px 6px' }}>+GPIO</button>
+                                        <button onClick={() => addInnerBlock('var_set')} style={{ fontSize: '0.7em', padding: '2px 6px' }}>+Var</button>
+                                        <button onClick={() => addInnerBlock('log')} style={{ fontSize: '0.7em', padding: '2px 6px' }}>+Log</button>
                                     </div>
                                 </div>
                             </div>
@@ -472,6 +561,7 @@ const BuilderSection = ({
     availablePwmPins,
     availableAdcPins,
     availableFunctions,
+    availableVars,
     pinUsage
 }: {
     title: string;
@@ -487,6 +577,7 @@ const BuilderSection = ({
     availablePwmPins: number[];
     availableAdcPins: number[];
     availableFunctions: string[];
+    availableVars?: string[];
     pinUsage: Map<number, string[]>;
 }) => {
     return (
@@ -500,7 +591,7 @@ const BuilderSection = ({
                 <div style={{ minHeight: '60px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
                     {items.length === 0 && <div style={{ padding: '20px', textAlign: 'center', border: '1px dashed var(--color-border)', borderRadius: '4px', color: 'var(--color-muted)' }}>Empty</div>}
                     {items.map(block => (
-                        <SortableBlock key={block.id} block={block} onDelete={onDelete} onChange={onChange} availableSpi={availableSpi} availableI2c={availableI2c} availablePwmPins={availablePwmPins} availableAdcPins={availableAdcPins} availableFunctions={availableFunctions} pinUsage={pinUsage} />
+                        <SortableBlock key={block.id} block={block} onDelete={onDelete} onChange={onChange} availableSpi={availableSpi} availableI2c={availableI2c} availablePwmPins={availablePwmPins} availableAdcPins={availableAdcPins} availableFunctions={availableFunctions} availableVars={availableVars || []} pinUsage={pinUsage} />
                     ))}
                 </div>
             </SortableContext>
@@ -510,6 +601,7 @@ const BuilderSection = ({
                 {available.includes('i2c_config') && <Button variant="outline" onClick={() => onAdd('i2c_config')} style={{ borderColor: color, color }}>+ I2C</Button>}
                 {available.includes('adc_config') && <Button variant="outline" onClick={() => onAdd('adc_config')} style={{ borderColor: color, color }}>+ ADC</Button>}
                 {available.includes('pwm_config') && <Button variant="outline" onClick={() => onAdd('pwm_config')} style={{ borderColor: color, color }}>+ PWM</Button>}
+                {available.includes('var_int') && <Button variant="outline" onClick={() => onAdd('var_int')} style={{ borderColor: color, color }}>+ Var</Button>}
 
                 {available.includes('gpio_set') && <Button variant="outline" onClick={() => onAdd('gpio_set')} style={{ borderColor: color, color }}>+ GPIO</Button>}
                 {available.includes('spi_write') && <Button variant="outline" onClick={() => onAdd('spi_write')} style={{ borderColor: color, color }}>+ SPI Write</Button>}
@@ -522,6 +614,10 @@ const BuilderSection = ({
                 {available.includes('log') && <Button variant="outline" onClick={() => onAdd('log')} style={{ borderColor: color, color }}>+ Log</Button>}
                 {available.includes('function_def') && <Button variant="outline" onClick={() => onAdd('function_def')} style={{ borderColor: color, color, background: 'rgba(255,215,0,0.1)' }}>+ Function</Button>}
                 {available.includes('function_call') && <Button variant="outline" onClick={() => onAdd('function_call')} style={{ borderColor: color, color, background: 'rgba(255,215,0,0.1)' }}>+ Call Function</Button>}
+
+                {available.includes('var_set') && <Button variant="outline" onClick={() => onAdd('var_set')} style={{ borderColor: color, color }}>+ Set Var</Button>}
+                {available.includes('if_block') && <Button variant="outline" onClick={() => onAdd('if_block')} style={{ borderColor: color, color, background: 'rgba(0,255,127,0.1)' }}>+ IF Logic</Button>}
+                {available.includes('code_snippet') && <Button variant="outline" onClick={() => onAdd('code_snippet')} style={{ borderColor: color, color, background: 'rgba(128,128,128,0.1)' }}>+ Custom Code</Button>}
             </div>
         </div>
     );
@@ -546,6 +642,7 @@ const BlockBuilder: React.FC<BlockBuilderProps> = ({ blocks, onChange }) => {
     const availablePwmPins = blocks.filter(b => b.type === 'pwm_config').map(b => b.params.pin as number);
     const availableAdcPins = blocks.filter(b => b.type === 'adc_config').map(b => b.params.pin as number);
     const availableFunctions = blocks.filter(b => b.type === 'function_def' && b.params.name).map(b => b.params.name as string);
+    const availableVars = blocks.filter(b => b.type === 'var_int' && b.params.name).map(b => b.params.name as string);
 
     // Build Pin Usage Map for conflict detection
     const pinUsage = new Map<number, string[]>();
@@ -594,6 +691,12 @@ const BlockBuilder: React.FC<BlockBuilderProps> = ({ blocks, onChange }) => {
         if (type === 'function_def') params = { name: `myFunction${blocks.filter(b => b.type === 'function_def').length + 1}`, innerBlocks: [] };
         if (type === 'function_call') params = { ref: availableFunctions[0] || '' };
 
+        // New Blocks
+        if (type === 'var_int') params = { name: 'myVar', value: 0 };
+        if (type === 'var_set') params = { name: availableVars[0] || 'myVar', value: 1 };
+        if (type === 'if_block') params = { left: 'myVar', operator: '==', right: '1', innerBlocks: [] };
+        if (type === 'code_snippet') params = { code: '// custom code' };
+
         const newBlock: Block = { id: crypto.randomUUID(), type, params };
         const isSetup = type.endsWith('_config');
         if (isSetup) {
@@ -621,7 +724,7 @@ const BlockBuilder: React.FC<BlockBuilderProps> = ({ blocks, onChange }) => {
                     id="setup"
                     color="var(--color-accent)"
                     items={setupBlocks}
-                    available={['spi_config', 'i2c_config', 'adc_config', 'pwm_config', 'function_def']}
+                    available={['spi_config', 'i2c_config', 'adc_config', 'pwm_config', 'function_def', 'var_int']}
                     onAdd={addBlock}
                     onChange={updateBlock}
                     onDelete={deleteBlock}
@@ -640,7 +743,7 @@ const BlockBuilder: React.FC<BlockBuilderProps> = ({ blocks, onChange }) => {
                     id="loop"
                     color="var(--color-primary)"
                     items={loopBlocks}
-                    available={['gpio_set', 'spi_write', 'spi_read', 'i2c_write', 'i2c_read', 'adc_read', 'pwm_set', 'sleep', 'log', 'function_call']}
+                    available={['gpio_set', 'spi_write', 'spi_read', 'i2c_write', 'i2c_read', 'adc_read', 'pwm_set', 'sleep', 'log', 'function_call', 'var_set', 'if_block', 'code_snippet']}
                     onAdd={addBlock}
                     onChange={updateBlock}
                     onDelete={deleteBlock}

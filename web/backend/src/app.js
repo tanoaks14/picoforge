@@ -5,6 +5,7 @@ const errorHandler = require('./core/error_handler');
 const projectRoutes = require('./routes/projects');
 const fileRoutes = require('./routes/files');
 const buildRoutes = require('./routes/builds');
+const templateRoutes = require('./routes/templates');
 
 const app = express();
 
@@ -16,6 +17,7 @@ app.use(express.json());
 app.use('/api/v1/projects', projectRoutes);
 app.use('/api/v1/files', fileRoutes);
 app.use('/api/v1/builds', buildRoutes);
+app.use('/api/v1/templates', templateRoutes);
 
 app.get('/health', (req, res) => {
     res.status(200).json({ status: 'ok' });

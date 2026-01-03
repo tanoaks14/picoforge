@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Card from '../primitives/Card';
 import Stack from '../layout/Stack';
@@ -8,8 +8,20 @@ import ConfigForm, { type ConfigValues } from './ConfigForm';
 import JsonPreview from './JsonPreview';
 import MermaidDiagramPreview from './MermaidDiagramPreview';
 import { ProjectService } from '../../services/ProjectService';
+import { TemplateService, type Template } from '../../services/TemplateService';
 import BlockBuilder, { type Block } from '../builder/BlockBuilder';
 import SplitPane from '../layout/SplitPane';
+
+const regenerateIds = (blocks: any[]): any[] => {
+    return blocks.map(b => ({
+        ...b,
+        id: crypto.randomUUID(),
+        params: {
+            ...b.params,
+            innerBlocks: b.params.innerBlocks ? regenerateIds(b.params.innerBlocks) : undefined
+        }
+    }));
+};
 
 const CreateProjectPage = () => {
     const navigate = useNavigate();
@@ -68,11 +80,60 @@ const CreateProjectPage = () => {
         }
     };
 
+    const [selectedTemplate, setSelectedTemplate] = useState('');
+    const [templates, setTemplates] = useState<Template[]>([]);
+
+    useEffect(() => {
+        TemplateService.list().then(setTemplates).catch(err => console.error("Failed to load templates", err));
+    }, []);
+
+    const applyTemplate = (tmplId: string) => {
+        if (!tmplId) return;
+        const found = templates.find(t => t.id === tmplId);
+        if (found) {
+            // Deep clone and regen IDs to avoid conflicts
+            const newBlocks = regenerateIds(found.blocks);
+            setBlocks(newBlocks);
+        }
+        setSelectedTemplate(''); // Reset select
+    };
+
+    const handleSaveTemplate = async () => {
+        const name = prompt("Enter Name for New Template:");
+        if (name) {
+            try {
+                await TemplateService.create(name, blocks);
+                const list = await TemplateService.list();
+                setTemplates(list);
+                alert("Template Saved!");
+            } catch (e) {
+                alert("Failed to save template");
+            }
+        }
+    };
+
     return (
         <Stack gap={16}>
-            <Stack direction="row" gap={12} align="center">
-                <Button variant="ghost" onClick={() => navigate('/')}>← Back</Button>
-                <h3>Create New Project</h3>
+            <Stack direction="row" gap={12} align="center" justify="space-between">
+                <Stack direction="row" gap={12} align="center">
+                    <Button variant="ghost" onClick={() => navigate('/')}>← Back</Button>
+                    <h3>Create New Project</h3>
+                </Stack>
+
+                <Stack direction="row" gap={8} align="center">
+                    <Button variant="outline" onClick={handleSaveTemplate} style={{ fontSize: '0.8em' }}>Save as Template</Button>
+                    <span style={{ fontSize: '0.8em', color: 'var(--color-muted)' }}>Load:</span>
+                    <select
+                        value={selectedTemplate}
+                        onChange={e => applyTemplate(e.target.value)}
+                        style={{ padding: '4px 8px', borderRadius: '4px', background: 'var(--color-surface)', color: 'var(--color-text)', border: '1px solid var(--color-border)' }}
+                    >
+                        <option value="">-- Select --</option>
+                        {templates.map(t => (
+                            <option key={t.id} value={t.id}>{t.name}</option>
+                        ))}
+                    </select>
+                </Stack>
             </Stack>
 
             <SplitPane

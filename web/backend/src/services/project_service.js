@@ -13,10 +13,10 @@ class ProjectService {
         try {
             const entries = await fs.readdir(this.workspacePath, { withFileTypes: true });
             return entries
-                .filter(entry => entry.isDirectory())
+                .filter(entry => entry.isDirectory() && !entry.name.startsWith('_')) // Ignore _templates
                 .map(entry => ({ name: entry.name }));
         } catch (error) {
-            // If workspace doesn't exist, try to create it and return empty list
+            // ... (keep existing error handling)
             if (error.code === 'ENOENT') {
                 await fs.mkdir(this.workspacePath, { recursive: true });
                 return [];
@@ -24,6 +24,43 @@ class ProjectService {
             logger.error(`Error listing projects: ${error.message}`);
             throw error;
         }
+    }
+
+    async listTemplates() {
+        const tPath = path.join(this.workspacePath, '_templates');
+        try {
+            await fs.mkdir(tPath, { recursive: true });
+            const files = await fs.readdir(tPath);
+            const templates = [];
+            for (const file of files) {
+                if (file.endsWith('.json')) {
+                    try {
+                        const content = await fs.readFile(path.join(tPath, file), 'utf8');
+                        const json = JSON.parse(content);
+                        templates.push({
+                            id: file.replace('.json', ''),
+                            name: json.name || file.replace('.json', ''),
+                            blocks: json.blocks
+                        });
+                    } catch (e) { logger.warn(`Failed to parse template ${file}`); }
+                }
+            }
+            return templates;
+        } catch (e) {
+            return [];
+        }
+    }
+
+    async saveTemplate(name, blocks) {
+        const tPath = path.join(this.workspacePath, '_templates');
+        await fs.mkdir(tPath, { recursive: true });
+
+        // Sanitize
+        const safeName = name.replace(/[^a-zA-Z0-9_-]/g, '_');
+        const content = JSON.stringify({ name, blocks }, null, 2);
+
+        await fs.writeFile(path.join(tPath, `${safeName}.json`), content);
+        return { id: safeName, name, blocks };
     }
 
     async createProject(name, config = {}) {
