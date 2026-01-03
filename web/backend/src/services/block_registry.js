@@ -28,11 +28,11 @@ async function loadCustomBlocks() {
         const data = await fs.readFile(CUSTOM_BLOCKS_PATH, 'utf-8');
         const parsed = JSON.parse(data);
         blockRegistry = new Map();
-        
+
         for (const block of parsed.blocks || []) {
             blockRegistry.set(block.id, block);
         }
-        
+
         lastLoadTime = now;
         console.log(`[BlockRegistry] Loaded ${blockRegistry.size} custom blocks`);
         return blockRegistry;
@@ -82,7 +82,7 @@ async function generateCode(block) {
     const params = block.params || {};
 
     return {
-        headers: (gen.headers || []).map(h => 
+        headers: (gen.headers || []).map(h =>
             h.startsWith('"') || h.startsWith('<') ? `#include ${h}` : `#include "${h}"`
         ),
         setup: gen.setup ? interpolate(gen.setup, params) : null,

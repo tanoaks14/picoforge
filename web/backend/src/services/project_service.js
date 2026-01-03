@@ -98,7 +98,7 @@ class ProjectService {
                 blocks: config.blocks || []
             };
 
-            const mainCpp = scaffoldService.generateMainCpp(name, scaffoldConfig);
+            const mainCpp = await scaffoldService.generateMainCpp(name, scaffoldConfig);
             await fs.writeFile(path.join(projectPath, 'main.cpp'), mainCpp);
 
             // Generate CMakeLists.txt with ScaffoldService

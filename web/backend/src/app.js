@@ -6,6 +6,7 @@ const projectRoutes = require('./routes/projects');
 const fileRoutes = require('./routes/files');
 const buildRoutes = require('./routes/builds');
 const templateRoutes = require('./routes/templates');
+const blocksRoutes = require('./routes/blocks');
 
 const app = express();
 
@@ -18,6 +19,7 @@ app.use('/api/v1/projects', projectRoutes);
 app.use('/api/v1/files', fileRoutes);
 app.use('/api/v1/builds', buildRoutes);
 app.use('/api/v1/templates', templateRoutes);
+app.use('/api/v1/blocks', blocksRoutes);
 
 app.get('/health', (req, res) => {
     res.status(200).json({ status: 'ok' });

@@ -1,132 +1,258 @@
 {
-  "version": "1.0",
-  "blocks": [
-    {
-      "id": "ssd1306_init",
-      "label": "SSD1306 Display Init",
-      "category": "setup",
-      "color": "#3b82f6",
-      "description": "Initialize SSD1306 OLED display over I2C",
-      "inputs": [
-        { "name": "i2c_inst", "type": "select", "options": ["i2c0", "i2c1"], "label": "I2C Instance", "default": "i2c0" },
-        { "name": "addr", "type": "text", "default": "0x3C", "label": "I2C Address" },
-        { "name": "width", "type": "number", "default": 128, "label": "Width (px)" },
-        { "name": "height", "type": "number", "default": 64, "label": "Height (px)" }
-      ],
-      "generator": {
-        "headers": ["\"ssd1306.h\""],
-        "setup": "ssd1306_init(${i2c_inst}, ${addr}, ${width}, ${height});",
-        "libraries": ["https://github.com/daschr/pico-ssd1306"]
-      }
-    },
-    {
-      "id": "ssd1306_print",
-      "label": "SSD1306 Print Text",
-      "category": "loop",
-      "color": "#3b82f6",
-      "description": "Print text to SSD1306 OLED display",
-      "inputs": [
-        { "name": "x", "type": "number", "default": 0, "label": "X Position" },
-        { "name": "y", "type": "number", "default": 0, "label": "Y Position" },
-        { "name": "text", "type": "text", "default": "Hello!", "label": "Text" },
-        { "name": "scale", "type": "number", "default": 1, "label": "Font Scale" }
-      ],
-      "generator": {
-        "headers": ["\"ssd1306.h\""],
-        "code": "ssd1306_draw_string(&disp, ${x}, ${y}, ${scale}, \"${text}\");\n        ssd1306_show(&disp);"
-      }
-    },
-    {
-      "id": "dht11_read",
-      "label": "DHT11 Temperature Read",
-      "category": "loop",
-      "color": "#22c55e",
-      "description": "Read temperature and humidity from DHT11 sensor",
-      "inputs": [
-        { "name": "pin", "type": "number", "default": 15, "label": "Data Pin (GPIO)" }
-      ],
-      "generator": {
-        "headers": ["\"dht.h\""],
-        "setup": "dht_init(${pin});",
-        "code": "float temp = 0, hum = 0;\n        dht_read(${pin}, &temp, &hum);\n        printf(\"Temp: %.1f C, Humidity: %.1f%%\\n\", temp, hum);",
-        "libraries": ["https://github.com/vmilea/pico_dht"]
-      }
-    },
-    {
-      "id": "neopixel_init",
-      "label": "NeoPixel Init",
-      "category": "setup",
-      "color": "#a855f7",
-      "description": "Initialize WS2812B NeoPixel LED strip",
-      "inputs": [
-        { "name": "pin", "type": "number", "default": 16, "label": "Data Pin (GPIO)" },
-        { "name": "num_leds", "type": "number", "default": 8, "label": "Number of LEDs" }
-      ],
-      "generator": {
-        "headers": ["\"ws2812.h\""],
-        "setup": "ws2812_init(pio0, 0, ${pin}, ${num_leds});",
-        "libraries": ["pico-sdk (built-in PIO)"]
-      }
-    },
-    {
-      "id": "neopixel_set",
-      "label": "NeoPixel Set Color",
-      "category": "loop",
-      "color": "#a855f7",
-      "description": "Set color of a specific NeoPixel LED",
-      "inputs": [
-        { "name": "index", "type": "number", "default": 0, "label": "LED Index" },
-        { "name": "r", "type": "number", "default": 255, "label": "Red (0-255)" },
-        { "name": "g", "type": "number", "default": 0, "label": "Green (0-255)" },
-        { "name": "b", "type": "number", "default": 0, "label": "Blue (0-255)" }
-      ],
-      "generator": {
-        "headers": ["\"ws2812.h\""],
-        "code": "ws2812_set_pixel(${index}, ${r}, ${g}, ${b});\n        ws2812_show();"
-      }
-    },
-    {
-      "id": "servo_init",
-      "label": "Servo Init",
-      "category": "setup",
-      "color": "#f97316",
-      "description": "Initialize a servo motor on a PWM pin",
-      "inputs": [
-        { "name": "pin", "type": "number", "default": 0, "label": "PWM Pin (GPIO)" }
-      ],
-      "generator": {
-        "headers": ["\"hardware/pwm.h\""],
-        "setup": "gpio_set_function(${pin}, GPIO_FUNC_PWM);\n    uint servo_slice_${pin} = pwm_gpio_to_slice_num(${pin});\n    pwm_set_wrap(servo_slice_${pin}, 20000); // 50Hz\n    pwm_set_enabled(servo_slice_${pin}, true);"
-      }
-    },
-    {
-      "id": "servo_angle",
-      "label": "Servo Set Angle",
-      "category": "loop",
-      "color": "#f97316",
-      "description": "Set servo to specific angle (0-180 degrees)",
-      "inputs": [
-        { "name": "pin", "type": "number", "default": 0, "label": "Servo Pin" },
-        { "name": "angle", "type": "number", "default": 90, "label": "Angle (0-180)" }
-      ],
-      "generator": {
-        "code": "// Servo angle: map 0-180 to 500-2500us pulse\n        uint16_t pulse_${pin} = 500 + (${angle} * 2000 / 180);\n        pwm_set_gpio_level(${pin}, pulse_${pin});"
-      }
-    },
-    {
-      "id": "button_read",
-      "label": "Button Read",
-      "category": "loop",
-      "color": "#64748b",
-      "description": "Read digital button state with debounce",
-      "inputs": [
-        { "name": "pin", "type": "number", "default": 14, "label": "Button Pin (GPIO)" },
-        { "name": "pull_up", "type": "select", "options": ["true", "false"], "default": "true", "label": "Internal Pull-Up" }
-      ],
-      "generator": {
-        "setup": "gpio_init(${pin});\n    gpio_set_dir(${pin}, GPIO_IN);\n    gpio_pull_up(${pin});",
-        "code": "bool btn_${pin} = !gpio_get(${pin}); // Active LOW with pull-up\n        if (btn_${pin}) {\n            printf(\"Button ${pin} pressed!\\n\");\n        }"
-      }
-    }
-  ]
+    "version": "1.0",
+    "blocks": [
+        {
+            "id": "ssd1306_init",
+            "label": "SSD1306 Display Init",
+            "category": "setup",
+            "color": "#3b82f6",
+            "description": "Initialize SSD1306 OLED display over I2C",
+            "inputs": [
+                {
+                    "name": "i2c_inst",
+                    "type": "select",
+                    "options": [
+                        "i2c0",
+                        "i2c1"
+                    ],
+                    "label": "I2C Instance",
+                    "default": "i2c0"
+                },
+                {
+                    "name": "addr",
+                    "type": "text",
+                    "default": "0x3C",
+                    "label": "I2C Address"
+                },
+                {
+                    "name": "width",
+                    "type": "number",
+                    "default": 128,
+                    "label": "Width (px)"
+                },
+                {
+                    "name": "height",
+                    "type": "number",
+                    "default": 64,
+                    "label": "Height (px)"
+                }
+            ],
+            "generator": {
+                "headers": [
+                    "\"ssd1306.h\""
+                ],
+                "setup": "ssd1306_init(${i2c_inst}, ${addr}, ${width}, ${height});",
+                "libraries": [
+                    "https://github.com/daschr/pico-ssd1306"
+                ]
+            }
+        },
+        {
+            "id": "ssd1306_print",
+            "label": "SSD1306 Print Text",
+            "category": "loop",
+            "color": "#3b82f6",
+            "description": "Print text to SSD1306 OLED display",
+            "inputs": [
+                {
+                    "name": "x",
+                    "type": "number",
+                    "default": 0,
+                    "label": "X Position"
+                },
+                {
+                    "name": "y",
+                    "type": "number",
+                    "default": 0,
+                    "label": "Y Position"
+                },
+                {
+                    "name": "text",
+                    "type": "text",
+                    "default": "Hello!",
+                    "label": "Text"
+                },
+                {
+                    "name": "scale",
+                    "type": "number",
+                    "default": 1,
+                    "label": "Font Scale"
+                }
+            ],
+            "generator": {
+                "headers": [
+                    "\"ssd1306.h\""
+                ],
+                "code": "ssd1306_draw_string(&disp, ${x}, ${y}, ${scale}, \"${text}\");\n        ssd1306_show(&disp);"
+            }
+        },
+        {
+            "id": "dht11_read",
+            "label": "DHT11 Temperature Read",
+            "category": "loop",
+            "color": "#22c55e",
+            "description": "Read temperature and humidity from DHT11 sensor",
+            "inputs": [
+                {
+                    "name": "pin",
+                    "type": "number",
+                    "default": 15,
+                    "label": "Data Pin (GPIO)"
+                }
+            ],
+            "generator": {
+                "headers": [
+                    "\"dht.h\""
+                ],
+                "setup": "dht_init(${pin});",
+                "code": "float temp = 0, hum = 0;\n        dht_read(${pin}, &temp, &hum);\n        printf(\"Temp: %.1f C, Humidity: %.1f%%\\n\", temp, hum);",
+                "libraries": [
+                    "https://github.com/vmilea/pico_dht"
+                ]
+            }
+        },
+        {
+            "id": "neopixel_init",
+            "label": "NeoPixel Init",
+            "category": "setup",
+            "color": "#a855f7",
+            "description": "Initialize WS2812B NeoPixel LED strip",
+            "inputs": [
+                {
+                    "name": "pin",
+                    "type": "number",
+                    "default": 16,
+                    "label": "Data Pin (GPIO)"
+                },
+                {
+                    "name": "num_leds",
+                    "type": "number",
+                    "default": 8,
+                    "label": "Number of LEDs"
+                }
+            ],
+            "generator": {
+                "headers": [
+                    "\"ws2812.h\""
+                ],
+                "setup": "ws2812_init(pio0, 0, ${pin}, ${num_leds});",
+                "libraries": [
+                    "pico-sdk (built-in PIO)"
+                ]
+            }
+        },
+        {
+            "id": "neopixel_set",
+            "label": "NeoPixel Set Color",
+            "category": "loop",
+            "color": "#a855f7",
+            "description": "Set color of a specific NeoPixel LED",
+            "inputs": [
+                {
+                    "name": "index",
+                    "type": "number",
+                    "default": 0,
+                    "label": "LED Index"
+                },
+                {
+                    "name": "r",
+                    "type": "number",
+                    "default": 255,
+                    "label": "Red (0-255)"
+                },
+                {
+                    "name": "g",
+                    "type": "number",
+                    "default": 0,
+                    "label": "Green (0-255)"
+                },
+                {
+                    "name": "b",
+                    "type": "number",
+                    "default": 0,
+                    "label": "Blue (0-255)"
+                }
+            ],
+            "generator": {
+                "headers": [
+                    "\"ws2812.h\""
+                ],
+                "code": "ws2812_set_pixel(${index}, ${r}, ${g}, ${b});\n        ws2812_show();"
+            }
+        },
+        {
+            "id": "servo_init",
+            "label": "Servo Init",
+            "category": "setup",
+            "color": "#f97316",
+            "description": "Initialize a servo motor on a PWM pin",
+            "inputs": [
+                {
+                    "name": "pin",
+                    "type": "number",
+                    "default": 0,
+                    "label": "PWM Pin (GPIO)"
+                }
+            ],
+            "generator": {
+                "headers": [
+                    "\"hardware/pwm.h\""
+                ],
+                "setup": "gpio_set_function(${pin}, GPIO_FUNC_PWM);\n    uint servo_slice_${pin} = pwm_gpio_to_slice_num(${pin});\n    pwm_set_wrap(servo_slice_${pin}, 20000); // 50Hz\n    pwm_set_enabled(servo_slice_${pin}, true);"
+            }
+        },
+        {
+            "id": "servo_angle",
+            "label": "Servo Set Angle",
+            "category": "loop",
+            "color": "#f97316",
+            "description": "Set servo to specific angle (0-180 degrees)",
+            "inputs": [
+                {
+                    "name": "pin",
+                    "type": "number",
+                    "default": 0,
+                    "label": "Servo Pin"
+                },
+                {
+                    "name": "angle",
+                    "type": "number",
+                    "default": 90,
+                    "label": "Angle (0-180)"
+                }
+            ],
+            "generator": {
+                "code": "// Servo angle: map 0-180 to 500-2500us pulse\n        uint16_t pulse_${pin} = 500 + (${angle} * 2000 / 180);\n        pwm_set_gpio_level(${pin}, pulse_${pin});"
+            }
+        },
+        {
+            "id": "button_read",
+            "label": "Button Read",
+            "category": "loop",
+            "color": "#64748b",
+            "description": "Read digital button state with debounce",
+            "inputs": [
+                {
+                    "name": "pin",
+                    "type": "number",
+                    "default": 14,
+                    "label": "Button Pin (GPIO)"
+                },
+                {
+                    "name": "pull_up",
+                    "type": "select",
+                    "options": [
+                        "true",
+                        "false"
+                    ],
+                    "default": "true",
+                    "label": "Internal Pull-Up"
+                }
+            ],
+            "generator": {
+                "setup": "gpio_init(${pin});\n    gpio_set_dir(${pin}, GPIO_IN);\n    gpio_pull_up(${pin});",
+                "code": "bool btn_${pin} = !gpio_get(${pin}); // Active LOW with pull-up\n        if (btn_${pin}) {\n            printf(\"Button ${pin} pressed!\\n\");\n        }"
+            }
+        }
+    ]
 }

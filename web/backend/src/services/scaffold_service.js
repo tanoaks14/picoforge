@@ -1,15 +1,29 @@
 const fs = require('fs').promises;
 const path = require('path');
+const blockRegistry = require('./block_registry');
 
-const generateBlockCode = (block) => {
+// Cache for custom block code generation
+let customBlockCache = new Map();
+
+const generateBlockCode = async (block) => {
     if (block.type === 'if_block') {
         const condition = `${block.params.left} ${block.params.operator} ${block.params.right}`;
-        const innerCode = (block.params.innerBlocks || []).map(b => generateBlockCode(b)).join('\n');
-        return `        if (${condition}) {\n${innerCode}\n        }`;
+        const innerCodeParts = [];
+        for (const b of (block.params.innerBlocks || [])) {
+            innerCodeParts.push(await generateBlockCode(b));
+        }
+        return `        if (${condition}) {\n${innerCodeParts.join('\n')}\n        }`;
     }
     if (LOOP_TEMPLATES[block.type]) {
         return LOOP_TEMPLATES[block.type](block.params);
     }
+    
+    // Check custom block registry
+    const customCode = await blockRegistry.generateCode(block);
+    if (customCode && customCode.code) {
+        return `        // Custom Block: ${block.type}\n        ${customCode.code}`;
+    }
+    
     return `        // Unknown block: ${block.type}`;
 };
 
@@ -151,7 +165,7 @@ const PROJECT_BOILERPLATE = {
 };
 
 class ScaffoldService {
-    generateMainCpp(projectName, config) {
+    async generateMainCpp(projectName, config) {
         const modules = Array.isArray(config) ? config : (config.modules || []);
         const blocks = !Array.isArray(config) && config.blocks ? config.blocks : [];
 
@@ -170,9 +184,9 @@ class ScaffoldService {
             }
         });
 
-        // 2. Scan Blocks for Headers/Init
+        // 2. Scan Blocks for Headers/Init (including custom blocks)
         let adcInitAdded = false;
-        blocks.forEach(block => {
+        for (const block of blocks) {
             if (block.type === 'gpio_set') usedGpioPins.add(block.params.pin);
             if (block.type.startsWith('spi')) headers.push('#include "hardware/spi.h"');
             if (block.type.startsWith('i2c')) headers.push('#include "hardware/i2c.h"');
@@ -184,7 +198,16 @@ class ScaffoldService {
                 }
             }
             if (block.type.startsWith('pwm')) headers.push('#include "hardware/pwm.h"');
-        });
+            
+            // Check for custom block headers
+            const customCode = await blockRegistry.generateCode(block);
+            if (customCode && customCode.headers) {
+                headers.push(...customCode.headers);
+            }
+            if (customCode && customCode.setup) {
+                setupCode.push(`    ${customCode.setup}`);
+            }
+        }
 
         // 3. Dynamic GPIO Init
         if (usedGpioPins.size > 0) {
@@ -195,30 +218,32 @@ class ScaffoldService {
         // 4. Process Blocks
         if (blocks.length > 0) {
             loopCode.push('        // --- Visual Builder Sequence ---');
-            blocks.forEach(block => {
+            for (const block of blocks) {
                 if (SETUP_TEMPLATES[block.type]) {
                     setupCode.push(SETUP_TEMPLATES[block.type](block.params));
-                } else if (loopCode || block.type === 'if_block') {
+                } else if (block.type !== 'function_def') {
                     // Everything else goes to loop via generateBlockCode, unless it's a function_def
-                    if (block.type !== 'function_def') {
-                        loopCode.push(generateBlockCode(block));
-                    }
+                    const code = await generateBlockCode(block);
+                    loopCode.push(code);
                 }
-            });
+            }
         }
 
         // 5. Generate User-Defined Functions
         const functionDefs = blocks.filter(b => b.type === 'function_def' && b.params.name);
         let functionCode = [];
-        functionDefs.forEach(fn => {
+        for (const fn of functionDefs) {
             const fnName = fn.params.name;
             const innerBlocks = fn.params.innerBlocks || [];
-            const fnBody = innerBlocks.map(b => generateBlockCode(b));
+            const fnBody = [];
+            for (const b of innerBlocks) {
+                fnBody.push(await generateBlockCode(b));
+            }
 
             if (fnBody.length === 0) fnBody.push('    // Empty function');
 
             functionCode.push(`// User-defined function: ${fnName}\nvoid ${fnName}() {\n${fnBody.join('\n')}\n}`);
-        });
+        }
 
         headers = [...new Set(headers)];
         const functionsSection = functionCode.length > 0 ? functionCode.join('\n\n') + '\n\n' : '';

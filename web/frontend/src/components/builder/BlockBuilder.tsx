@@ -6,12 +6,22 @@ import Card from '../primitives/Card';
 import Button from '../primitives/Button';
 import Select from '../primitives/Select';
 import Input from '../primitives/Input';
+import { useCustomBlocks, type CustomBlockDefinition } from '../../hooks/useCustomBlocks';
+import { type BlockInput } from '../../services/BlockService';
+import GenericBlock from './GenericBlock';
+
+// Built-in block types
+type BuiltinBlockType = 'gpio_set' | 'sleep' | 'uart_write' | 'log' | 'spi_config' | 'i2c_config' | 'spi_write' | 'spi_read' | 'i2c_write' | 'i2c_read' | 'adc_config' | 'pwm_config' | 'adc_read' | 'pwm_set' | 'function_def' | 'function_call' | 'if_block' | 'var_int' | 'var_set' | 'code_snippet';
 
 export type Block = {
     id: string;
-    type: 'gpio_set' | 'sleep' | 'uart_write' | 'log' | 'spi_config' | 'i2c_config' | 'spi_write' | 'spi_read' | 'i2c_write' | 'i2c_read' | 'adc_config' | 'pwm_config' | 'adc_read' | 'pwm_set' | 'function_def' | 'function_call' | 'if_block' | 'var_int' | 'var_set' | 'code_snippet';
+    type: BuiltinBlockType | string; // string allows custom block types
     params: any;
 };
+
+// Check if a block type is a custom block (not a builtin)
+const BUILTIN_TYPES: BuiltinBlockType[] = ['gpio_set', 'sleep', 'uart_write', 'log', 'spi_config', 'i2c_config', 'spi_write', 'spi_read', 'i2c_write', 'i2c_read', 'adc_config', 'pwm_config', 'adc_read', 'pwm_set', 'function_def', 'function_call', 'if_block', 'var_int', 'var_set', 'code_snippet'];
+const isCustomBlockType = (type: string): boolean => !BUILTIN_TYPES.includes(type as BuiltinBlockType);
 
 // Valid Pins for Pico
 const VALID_GPIOS = [
@@ -63,7 +73,8 @@ const SortableBlock = ({
     availableAdcPins,
     availableFunctions,
     availableVars,
-    pinUsage
+    pinUsage,
+    customBlockDefs
 }: {
     block: Block;
     onDelete: (id: string) => void;
@@ -75,6 +86,7 @@ const SortableBlock = ({
     availableFunctions: string[];
     availableVars: string[];
     pinUsage: Map<number, string[]>;
+    customBlockDefs: Map<string, CustomBlockDefinition>;
 }) => {
     const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: block.id });
 
@@ -536,6 +548,16 @@ const SortableBlock = ({
                             {(availableFunctions || []).map(fn => <option key={fn} value={fn}>{fn}()</option>)}
                         </select>
                     )}
+
+                    {/* Custom Blocks - Rendered via GenericBlock */}
+                    {isCustomBlockType(block.type) && customBlockDefs.has(block.type) && (
+                        <GenericBlock
+                            definition={customBlockDefs.get(block.type)!}
+                            params={block.params}
+                            onChange={(newParams) => onChange(block.id, newParams)}
+                            embedded={true}
+                        />
+                    )}
                 </div>
             </div >
             <Button variant="ghost" onClick={() => onDelete(block.id)} style={{ color: 'var(--color-danger)' }}>×</Button>
@@ -562,7 +584,9 @@ const BuilderSection = ({
     availableAdcPins,
     availableFunctions,
     availableVars,
-    pinUsage
+    pinUsage,
+    customBlockDefs,
+    customBlocksForSection
 }: {
     title: string;
     items: Block[];
@@ -579,6 +603,8 @@ const BuilderSection = ({
     availableFunctions: string[];
     availableVars?: string[];
     pinUsage: Map<number, string[]>;
+    customBlockDefs: Map<string, CustomBlockDefinition>;
+    customBlocksForSection: CustomBlockDefinition[];
 }) => {
     return (
         <div style={{ marginBottom: '24px', border: `1px solid ${color}`, borderRadius: '8px', padding: '16px', background: 'rgba(0,0,0,0.02)' }}>
@@ -591,7 +617,7 @@ const BuilderSection = ({
                 <div style={{ minHeight: '60px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
                     {items.length === 0 && <div style={{ padding: '20px', textAlign: 'center', border: '1px dashed var(--color-border)', borderRadius: '4px', color: 'var(--color-muted)' }}>Empty</div>}
                     {items.map(block => (
-                        <SortableBlock key={block.id} block={block} onDelete={onDelete} onChange={onChange} availableSpi={availableSpi} availableI2c={availableI2c} availablePwmPins={availablePwmPins} availableAdcPins={availableAdcPins} availableFunctions={availableFunctions} availableVars={availableVars || []} pinUsage={pinUsage} />
+                        <SortableBlock key={block.id} block={block} onDelete={onDelete} onChange={onChange} availableSpi={availableSpi} availableI2c={availableI2c} availablePwmPins={availablePwmPins} availableAdcPins={availableAdcPins} availableFunctions={availableFunctions} availableVars={availableVars || []} pinUsage={pinUsage} customBlockDefs={customBlockDefs} />
                     ))}
                 </div>
             </SortableContext>
@@ -618,6 +644,25 @@ const BuilderSection = ({
                 {available.includes('var_set') && <Button variant="outline" onClick={() => onAdd('var_set')} style={{ borderColor: color, color }}>+ Set Var</Button>}
                 {available.includes('if_block') && <Button variant="outline" onClick={() => onAdd('if_block')} style={{ borderColor: color, color, background: 'rgba(0,255,127,0.1)' }}>+ IF Logic</Button>}
                 {available.includes('code_snippet') && <Button variant="outline" onClick={() => onAdd('code_snippet')} style={{ borderColor: color, color, background: 'rgba(128,128,128,0.1)' }}>+ Custom Code</Button>}
+
+                {/* Custom Blocks - dynamically loaded from registry */}
+                {customBlocksForSection.length > 0 && (
+                    <>
+                        <div style={{ width: '100%', height: '1px', background: 'var(--color-border)', margin: '8px 0' }} />
+                        <div style={{ width: '100%', fontSize: '0.7em', color: 'var(--color-muted)', marginBottom: '4px' }}>📦 Custom Blocks:</div>
+                        {customBlocksForSection.map(def => (
+                            <Button
+                                key={def.id}
+                                variant="outline"
+                                onClick={() => onAdd(def.id as Block['type'])}
+                                style={{ borderColor: def.color || color, color: def.color || color, background: `${def.color || color}15` }}
+                                title={def.description}
+                            >
+                                + {def.label}
+                            </Button>
+                        ))}
+                    </>
+                )}
             </div>
         </div>
     );
@@ -632,9 +677,27 @@ type BlockBuilderProps = {
 const BlockBuilder: React.FC<BlockBuilderProps> = ({ blocks, onChange }) => {
     const sensors = useSensors(useSensor(PointerSensor), useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }));
 
-    // Segregate blocks
-    const setupBlocks = blocks.filter(b => b.type.endsWith('_config'));
-    const loopBlocks = blocks.filter(b => !b.type.endsWith('_config'));
+    // Load custom blocks from registry
+    const { customBlocks, setupBlocks: customSetupBlocks, loopBlocks: customLoopBlocks, isLoading: customBlocksLoading, getBlockById } = useCustomBlocks();
+
+    // Build a map for quick lookup
+    const customBlockDefs = React.useMemo(() => {
+        const map = new Map<string, CustomBlockDefinition>();
+        customBlocks.forEach(def => map.set(def.id, def));
+        return map;
+    }, [customBlocks]);
+
+    // Segregate blocks - custom blocks go to setup if they have 'setup' category, otherwise loop
+    const setupBlocks = blocks.filter(b => {
+        if (b.type.endsWith('_config')) return true;
+        const customDef = customBlockDefs.get(b.type);
+        return customDef?.category === 'setup';
+    });
+    const loopBlocks = blocks.filter(b => {
+        if (b.type.endsWith('_config')) return false;
+        const customDef = customBlockDefs.get(b.type);
+        return !customDef || customDef.category !== 'setup';
+    });
 
     // Dynamic Discovery of Configured Instances from Setup Blocks
     const availableSpi = blocks.filter(b => b.type === 'spi_config').map(b => b.params.inst || 'spi0');
@@ -663,13 +726,47 @@ const BlockBuilder: React.FC<BlockBuilderProps> = ({ blocks, onChange }) => {
         const oldIndex = blocks.findIndex(b => b.id === active.id);
         const newIndex = blocks.findIndex(b => b.id === over.id);
 
-        if (blocks[oldIndex].type.endsWith('_config') !== blocks[newIndex].type.endsWith('_config')) return;
+        // Prevent dragging between sections
+        const isOldSetup = setupBlocks.some(b => b.id === active.id);
+        const isNewSetup = setupBlocks.some(b => b.id === over.id);
+        if (isOldSetup !== isNewSetup) return;
 
         onChange(arrayMove(blocks, oldIndex, newIndex));
     };
 
     const addBlock = (type: Block['type']) => {
         let params: any = {};
+
+        // Check if it's a custom block first
+        const customDef = customBlockDefs.get(type);
+        if (customDef) {
+            // Initialize params from custom block definition defaults
+            customDef.inputs.forEach((input: BlockInput) => {
+                if (input.default !== undefined) {
+                    params[input.name] = input.default;
+                } else if (input.type === 'number') {
+                    params[input.name] = 0;
+                } else if (input.type === 'select' && input.options && input.options.length > 0) {
+                    params[input.name] = input.options[0];
+                } else {
+                    params[input.name] = '';
+                }
+            });
+
+            const newBlock: Block = { id: crypto.randomUUID(), type, params };
+            const isSetup = customDef.category === 'setup';
+            if (isSetup) {
+                const lastSetupIndex = setupBlocks.length;
+                const newBlocks = [...blocks];
+                newBlocks.splice(lastSetupIndex, 0, newBlock);
+                onChange(newBlocks);
+            } else {
+                onChange([...blocks, newBlock]);
+            }
+            return;
+        }
+
+        // Built-in block defaults
         if (type === 'gpio_set') params = { pin: 25, level: 1 };
         if (type === 'sleep') params = { ms: 500 };
         if (type === 'uart_write' || type === 'log') params = { text: 'Hello' };
@@ -716,6 +813,7 @@ const BlockBuilder: React.FC<BlockBuilderProps> = ({ blocks, onChange }) => {
         <Card title="Visual Logic Builder" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
             <div style={{ color: 'var(--color-muted)', marginBottom: '10px' }}>
                 Define your hardware configuration in <b>Setup</b>, then drag actions into the <b>Loop</b>.
+                {customBlocksLoading && <span style={{ marginLeft: '8px', opacity: 0.6 }}>Loading custom blocks...</span>}
             </div>
 
             <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
@@ -734,6 +832,8 @@ const BlockBuilder: React.FC<BlockBuilderProps> = ({ blocks, onChange }) => {
                     availableAdcPins={availableAdcPins}
                     availableFunctions={availableFunctions}
                     pinUsage={pinUsage}
+                    customBlockDefs={customBlockDefs}
+                    customBlocksForSection={customSetupBlocks}
                 />
 
                 <div style={{ textAlign: 'center', fontSize: '1.5rem', opacity: 0.3 }}>⬇</div>
@@ -753,6 +853,8 @@ const BlockBuilder: React.FC<BlockBuilderProps> = ({ blocks, onChange }) => {
                     availableAdcPins={availableAdcPins}
                     availableFunctions={availableFunctions}
                     pinUsage={pinUsage}
+                    customBlockDefs={customBlockDefs}
+                    customBlocksForSection={customLoopBlocks}
                 />
             </DndContext>
         </Card>
