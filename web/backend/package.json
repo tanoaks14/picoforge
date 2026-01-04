@@ -1,0 +1,35 @@
+{
+  "name": "picoforge-backend",
+  "version": "1.0.0",
+  "description": "Backend API for PicoForge",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "nodemon src/index.js",
+    "test": "jest"
+  },
+  "keywords": [
+    "picoforge",
+    "raspberry-pi",
+    "pico",
+    "generator"
+  ],
+  "author": "PicoForge Team",
+  "license": "MIT",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dockerode": "^3.3.5",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "helmet": "^7.0.0",
+    "joi": "^17.9.2",
+    "uuid": "^9.0.0",
+    "winston": "^3.10.0"
+  },
+  "devDependencies": {
+    "jest": "^29.6.2",
+    "nodemon": "^3.0.1",
+    "rimraf": "^6.1.2",
+    "supertest": "^6.3.3"
+  }
+}

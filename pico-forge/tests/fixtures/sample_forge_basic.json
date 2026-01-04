@@ -1,0 +1,29 @@
+{
+    "version": "1.0",
+    "project_name": "sample_project",
+    "board": {
+        "profile": "pico"
+    },
+    "gpio": [
+        {
+            "pin": 15,
+            "direction": "output",
+            "pull": "none"
+        }
+    ],
+    "pwm": [
+        {
+            "pin": 2,
+            "freq_hz": 1000,
+            "duty_pct": 50.0
+        }
+    ],
+    "timers": [
+        {
+            "id": "heartbeat",
+            "type": "periodic",
+            "interval_ms": 500,
+            "callback": "on_heartbeat"
+        }
+    ]
+}

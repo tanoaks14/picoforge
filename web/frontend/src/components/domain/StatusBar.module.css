@@ -1,0 +1,22 @@
+.bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 12px 14px;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--color-border);
+    background: linear-gradient(120deg, rgba(125, 226, 255, 0.14), rgba(174, 230, 127, 0.14));
+    color: var(--color-text);
+    box-shadow: var(--shadow-sm);
+}
+
+.meta {
+    color: var(--color-muted);
+    font-size: 13px;
+}
+
+.actions {
+    display: flex;
+    gap: 8px;
+}

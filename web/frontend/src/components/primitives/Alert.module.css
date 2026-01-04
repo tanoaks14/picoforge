@@ -1,0 +1,42 @@
+.alert {
+    padding: 12px 14px;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--color-border);
+    background: var(--color-surface);
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+}
+
+.title {
+    font-weight: 700;
+    margin-bottom: 4px;
+}
+
+.body {
+    color: var(--color-text);
+}
+
+.tone-default {
+    border-color: var(--color-border);
+}
+
+.tone-info {
+    border-color: rgba(125, 226, 255, 0.5);
+    background: rgba(125, 226, 255, 0.08);
+}
+
+.tone-warning {
+    border-color: rgba(255, 212, 121, 0.5);
+    background: rgba(255, 212, 121, 0.08);
+}
+
+.tone-danger {
+    border-color: rgba(255, 123, 123, 0.5);
+    background: rgba(255, 123, 123, 0.08);
+}
+
+.tone-success {
+    border-color: rgba(156, 247, 200, 0.5);
+    background: rgba(156, 247, 200, 0.08);
+}

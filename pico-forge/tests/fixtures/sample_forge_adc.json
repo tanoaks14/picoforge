@@ -1,0 +1,16 @@
+{
+    "version": "1.0",
+    "project_name": "sample_adc",
+    "adc": [
+        {
+            "pin": 26,
+            "samples": 8,
+            "temperature": false
+        },
+        {
+            "pin": 26,
+            "samples": 4,
+            "temperature": true
+        }
+    ]
+}

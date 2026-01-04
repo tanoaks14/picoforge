@@ -1,0 +1,31 @@
+const express = require('express');
+const cors = require('cors');
+const helmet = require('helmet');
+const errorHandler = require('./core/error_handler');
+const projectRoutes = require('./routes/projects');
+const fileRoutes = require('./routes/files');
+const buildRoutes = require('./routes/builds');
+const templateRoutes = require('./routes/templates');
+const blocksRoutes = require('./routes/blocks');
+
+const app = express();
+
+app.use(helmet());
+app.use(cors());
+app.use(express.json());
+
+
+app.use('/api/v1/projects', projectRoutes);
+app.use('/api/v1/files', fileRoutes);
+app.use('/api/v1/builds', buildRoutes);
+app.use('/api/v1/templates', templateRoutes);
+app.use('/api/v1/blocks', blocksRoutes);
+
+app.get('/health', (req, res) => {
+    res.status(200).json({ status: 'ok' });
+});
+
+
+app.use(errorHandler);
+
+module.exports = app;

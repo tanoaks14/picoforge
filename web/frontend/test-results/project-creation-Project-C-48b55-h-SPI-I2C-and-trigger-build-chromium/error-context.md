@@ -1,0 +1,143 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e3]:
+    - banner [ref=e4]:
+      - generic [ref=e5]:
+        - generic [ref=e6]: PicoForge
+        - generic [ref=e7]: Embedded development environment
+      - generic [ref=e10]:
+        - button "Theme" [ref=e11] [cursor=pointer]
+        - tooltip "Toggle light/dark coming soon"
+    - main [ref=e12]:
+      - generic [ref=e13]:
+        - generic [ref=e14]:
+          - generic [ref=e15]:
+            - link "← Back" [ref=e16] [cursor=pointer]:
+              - /url: /
+              - button "← Back" [ref=e17]
+            - heading "e2e-demo-1767526209174" [level=3] [ref=e18]
+          - generic [ref=e19]:
+            - button "Save" [ref=e20] [cursor=pointer]
+            - button "Building..." [disabled] [ref=e21]
+            - button "Download UF2" [disabled] [ref=e22]
+        - generic [ref=e23]:
+          - generic [ref=e25]:
+            - generic [ref=e27]: Editor - main.cpp
+            - generic [ref=e28]:
+              - generic [ref=e29]:
+                - button "CMakeLists.txt" [ref=e30] [cursor=pointer]
+                - button "forge.json" [ref=e31] [cursor=pointer]
+                - button "main.cpp" [ref=e32] [cursor=pointer]
+              - code [ref=e36]:
+                - generic [ref=e37]:
+                  - textbox "Editor content" [ref=e38]
+                  - textbox [ref=e39]
+                  - generic [ref=e41]:
+                    - generic [ref=e43]: "3"
+                    - generic [ref=e45]: "4"
+                    - generic [ref=e47]: "5"
+                    - generic [ref=e49]: "6"
+                    - generic [ref=e50]:
+                      - generic [ref=e51] [cursor=pointer]: 
+                      - generic [ref=e52]: "7"
+                    - generic [ref=e54]: "8"
+                    - generic [ref=e56]: "9"
+                    - generic [ref=e58]: "10"
+                    - generic [ref=e60]: "11"
+                    - generic [ref=e62]: "12"
+                    - generic [ref=e64]: "13"
+                    - generic [ref=e66]: "14"
+                    - generic [ref=e68]: "15"
+                    - generic [ref=e70]: "16"
+                    - generic [ref=e72]: "17"
+                    - generic [ref=e74]: "18"
+                    - generic [ref=e76]: "19"
+                    - generic [ref=e78]: "20"
+                    - generic [ref=e80]: "21"
+                    - generic [ref=e83]: "1"
+                    - generic [ref=e85]: "2"
+                    - generic [ref=e87]: "22"
+                    - generic [ref=e89]: "23"
+                    - generic [ref=e91]: "24"
+                    - generic [ref=e93]: "25"
+                    - generic [ref=e95]: "26"
+                    - generic [ref=e97]: "27"
+                    - generic [ref=e99]: "28"
+                    - generic [ref=e101]: "29"
+                    - generic [ref=e103]: "30"
+                    - generic [ref=e105]: "31"
+                    - generic [ref=e107]: "32"
+                    - generic [ref=e109]: "33"
+                    - generic [ref=e111]: "34"
+                    - generic [ref=e113]: "35"
+                    - generic [ref=e115]: "36"
+                    - generic [ref=e116]:
+                      - generic [ref=e117] [cursor=pointer]: 
+                      - generic [ref=e118]: "37"
+                    - generic [ref=e120]: "38"
+                    - generic [ref=e122]: "39"
+                    - generic [ref=e124]: "40"
+                    - generic [ref=e126]: "41"
+                    - generic [ref=e128]: "42"
+                    - generic [ref=e130]: "43"
+                    - generic [ref=e132]: "44"
+                    - generic [ref=e134]: "45"
+                    - generic [ref=e136]: "46"
+                    - generic [ref=e138]: "47"
+                    - generic [ref=e140]: "48"
+                    - generic [ref=e142]: "49"
+                    - generic [ref=e144]: "50"
+                    - generic [ref=e146]: "51"
+                    - generic [ref=e148]: "52"
+                  - generic [ref=e257]:
+                    - generic [ref=e259]: "#include \"hardware/adc.h\""
+                    - generic [ref=e261]: "#include \"hardware/spi.h\""
+                    - generic [ref=e263]: "#include \"hardware/i2c.h\""
+                    - generic [ref=e266]: "int main() {"
+                    - generic [ref=e268]: stdio_init_all();
+                    - generic [ref=e270]: "printf(\"Project: e2e-demo-1767526209174 Initialized\\n\");"
+                    - generic [ref=e273]: bool adc_initialized = false;
+                    - generic [ref=e276]: // ADC Initialization
+                    - generic [ref=e278]: adc_init();
+                    - generic [ref=e280]: adc_gpio_init(26);
+                    - generic [ref=e283]: // SPI Config (spi0)
+                    - generic [ref=e285]: spi_init(spi0, 1000000);
+                    - generic [ref=e287]: gpio_set_function(0, GPIO_FUNC_SPI);
+                    - generic [ref=e289]: gpio_set_function(2, GPIO_FUNC_SPI);
+                    - generic [ref=e291]: gpio_set_function(3, GPIO_FUNC_SPI);
+                    - generic [ref=e293]: "#include <stdio.h>"
+                    - generic [ref=e295]: "#include \"pico/stdlib.h\""
+                    - generic [ref=e297]: gpio_init(1);
+                    - generic [ref=e299]: gpio_set_dir(1, GPIO_OUT);
+                    - generic [ref=e301]: gpio_put(1, 1);
+                    - generic [ref=e304]: // I2C Config (i2c0)
+                    - generic [ref=e306]: i2c_init(i2c0, 100000);
+                    - generic [ref=e308]: gpio_set_function(4, GPIO_FUNC_I2C);
+                    - generic [ref=e310]: gpio_set_function(5, GPIO_FUNC_I2C);
+                    - generic [ref=e312]: gpio_pull_up(4);
+                    - generic [ref=e314]: gpio_pull_up(5);
+                    - generic [ref=e317]: // ADC Config (Pin 26)
+                    - generic [ref=e319]: "if (!adc_initialized) { adc_init(); adc_initialized = true; }"
+                    - generic [ref=e321]: adc_gpio_init(26);
+                    - generic [ref=e324]: "while(true) {"
+                    - generic [ref=e330]: // --- Visual Builder Sequence ---
+                    - generic [ref=e332]: // ADC Read
+                    - generic [ref=e334]: adc_select_input(26 - 26);
+                    - generic [ref=e336]: uint16_t adc_val_26 = adc_read();
+                    - generic [ref=e338]: "printf(\"ADC (Pin 26): %d\\n\", adc_val_26);"
+                    - generic [ref=e340]: // I2C Read
+                    - generic [ref=e342]: uint8_t i2c_rx_buf[1];
+                    - generic [ref=e344]: i2c_read_blocking(i2c0, 0x3C, i2c_rx_buf, 1, false);
+                    - generic [ref=e346]: "printf(\"I2C Read: %02x\\n\", i2c_rx_buf[0]);"
+                    - generic [ref=e348]: "}"
+                    - generic [ref=e350]: return 0;
+                    - generic [ref=e352]: "}"
+          - generic [ref=e356]:
+            - generic [ref=e358]: Build Output
+            - generic [ref=e360]: "Starting build... \x02\x00\x00\x00\x00\x00\x007Using PICO_SDK_PATH from environment ('/opt/pico-sdk') \x02\x00\x00\x00\x00\x00\x00\x1fPICO_SDK_PATH is /opt/pico-sdk \x02\x00\x00\x00\x00\x00\x00EDefaulting platform (PICO_PLATFORM) to 'rp2040' since not specified. \x02\x00\x00\x00\x00\x00\x00DDefaulting target board (PICO_BOARD) to 'pico' since not specified. \x02\x00\x00\x00\x00\x00\x00NUsing board configuration from /opt/pico-sdk/src/boards/include/boards/pico.h \x02\x00\x00\x00\x00\x00\x00+Pico Platform (PICO_PLATFORM) is 'rp2040'. \x01\x00\x00\x00\x00\x00\x00;-- Defaulting build type to 'Release' since not specified. \x02\x00\x00\x00\x00\x00\x00YDefaulting compiler (PICO_COMPILER) to 'pico_arm_cortex_m0plus_gcc' since not specified. \x02\x00\x00\x00\x00\x00\x00JConfiguring toolchain based on PICO_COMPILER 'pico_arm_cortex_m0plus_gcc' \x02\x00\x00\x00\x00\x00\x00.Defaulting PICO_GCC_TRIPLE to 'arm-none-eabi' \x01\x00\x00\x00\x00\x00\x00/-- The C compiler identification is GNU 12.2.1 \x01\x00\x00\x00\x00\x00\x001-- The CXX compiler identification is GNU 12.2.1 \x01\x00\x00\x00\x00\x00\x00*-- The ASM compiler identification is GNU \x01\x00\x00\x00\x00\x00\x00/-- Found assembler: /usr/bin/arm-none-eabi-gcc \x01\x00\x00\x00\x00\x00\x00!-- Detecting C compiler ABI info \x01\x00\x00\x00\x00\x00\x00(-- Detecting C compiler ABI info - done \x01\x00\x00\x00\x00\x00\x00F-- Check for working C compiler: /usr/bin/arm-none-eabi-gcc - skipped \x01\x00\x00\x00\x00\x00\x00 -- Detecting C compile features \x01\x00\x00\x00\x00\x00\x00'-- Detecting C compile features - done \x01\x00\x00\x00\x00\x00\x00#-- Detecting CXX compiler ABI info \x01\x00\x00\x00\x00\x00\x00*-- Detecting CXX compiler ABI info - done \x01\x00\x00\x00\x00\x00\x00H-- Check for working CXX compiler: /usr/bin/arm-none-eabi-g++ - skipped \x01\x00\x00\x00\x00\x00\x00\"-- Detecting CXX compile features \x01\x00\x00\x00\x00\x00\x00)-- Detecting CXX compile features - done \x02\x00\x00\x00\x00\x00\x00\x16Build type is Release \x01\x00\x00\x00\x00\x00\x00[-- Found Python3: /usr/bin/python3 (found version \"3.11.2\") found components: Interpreter \x02\x00\x00\x00\x00\x00\x00^TinyUSB available at /opt/pico-sdk/lib/tinyusb/hw/bsp/rp2040; enabling build support for USB. \x02\x00\x00\x00\x00\x00\x00/BTstack available at /opt/pico-sdk/lib/btstack \x02\x00\x00\x00\x00\x00\x009cyw43-driver available at /opt/pico-sdk/lib/cyw43-driver \x02\x00\x00\x00\x00\x00\x00/mbedtls available at /opt/pico-sdk/lib/mbedtls \x02\x00\x00\x00\x00\x00\x00)lwIP available at /opt/pico-sdk/lib/lwip \x02\x00\x00\x00\x00\x00\x00FCMake Warning at /opt/pico-sdk/tools/Findpicotool.cmake:30 (message): \x02\x00\x00\x00\x00\x00\x00H No installed picotool with version 2.1.1 found - building from source \x02\x00\x00\x00\x00\x00\x00\x01 \x02\x00\x00\x00\x00\x00\x00H It is recommended to build and install picotool separately, or to set \x02\x00\x00\x00\x00\x00\x00F PICOTOOL_FETCH_FROM_GIT_PATH to a common directory for all your SDK \x02\x00\x00\x00\x00\x00\x00 projects \x02\x00\x00\x00\x00\x00\x00%Call Stack (most recent call first): \x02\x00\x00\x00\x00\x00\x008 /opt/pico-sdk/tools/CMakeLists.txt:168 (find_package) \x02\x00\x00\x00\x00\x00\x00> /opt/pico-sdk/tools/CMakeLists.txt:688 (pico_init_picotool) \x02\x00\x00\x00\x00\x00\x00K /opt/pico-sdk/src/cmake/on_device.cmake:81 (picotool_postprocess_binary) \x02\x00\x00\x00\x00\x00\x00- CMakeLists.txt:21 (pico_add_extra_outputs) \x02\x00\x00\x00\x00\x00\x00\x01 \x02\x00\x00\x00\x00\x00\x00\x01 \x02\x00\x00\x00\x00\x00\x00\x15Downloading Picotool \x02\x00\x00\x00\x00\x00\x00XUsing picotool from /app/workspace/e2e-demo-1767526209174/build/_deps/picotool/picotool \x01\x00\x00\x00\x00\x00\x00\x14-- Configuring done \x01\x00\x00\x00\x00\x00\x00\x13-- Generating done \x01\x00\x00\x00\x00\x00\x00Q-- Build files have been written to: /app/workspace/e2e-demo-1767526209174/build \x01\x00\x00\x00\x00\x00\x00n[ 1%] Building ASM object pico-sdk/src/rp2040/boot_stage2/CMakeFiles/bs2_default.dir/compile_time_choice.S.o \x01\x00\x00\x00\x00\x00\x00.[ 2%] Linking ASM executable bs2_default.elf \x01\x00\x00\x00\x00\x00\x00 [ 2%] Built target bs2_default \x01\x00\x00\x00\x00\x00\x00\"[ 3%] Generating bs2_default.bin \x01\x00\x00\x00\x00\x00\x003[ 5%] Generating bs2_default_padded_checksummed.S \x01\x00\x00\x00\x00\x00\x00�[ 6%] Building ASM object pico-sdk/src/rp2040/boot_stage2/CMakeFiles/bs2_default_library.dir/bs2_default_padded_checksummed.S.o \x01\x00\x00\x00\x00\x00\x00([ 6%] Built target bs2_default_library \x01\x00\x00\x00\x00\x00\x00-[ 6%] Built target picotoolForceReconfigure \x01\x00\x00\x00\x00\x00\x000[ 7%] Creating directories for 'picotoolBuild' \x01\x00\x00\x00\x00\x00\x00,[ 9%] No download step for 'picotoolBuild' \x01\x00\x00\x00\x00\x00\x00*[ 10%] No update step for 'picotoolBuild' \x01\x00\x00\x00\x00\x00\x00)[ 11%] No patch step for 'picotoolBuild' \x01\x00\x00\x00\x00\x00\x005[ 13%] Performing configure step for 'picotoolBuild' \x01\x00\x00\x00\x00\x00\x00>Not searching for unused variables given on the command line. \x01\x00\x00\x00\x00\x00\x00/-- The C compiler identification is GNU 12.2.0 \x01\x00\x00\x00\x00\x00\x001-- The CXX compiler identification is GNU 12.2.0 \x01\x00\x00\x00\x00\x00\x00!-- Detecting C compiler ABI info \x01\x00\x00\x00\x00\x00\x00(-- Detecting C compiler ABI info - done \x01\x00\x00\x00\x00\x00\x007-- Check for working C compiler: /usr/bin/cc - skipped \x01\x00\x00\x00\x00\x00\x00 -- Detecting C compile features \x01\x00\x00\x00\x00\x00\x00'-- Detecting C compile features - done \x01\x00\x00\x00\x00\x00\x00#-- Detecting CXX compiler ABI info \x01\x00\x00\x00\x00\x00\x00*-- Detecting CXX compiler ABI info - done \x01\x00\x00\x00\x00\x00\x00:-- Check for working CXX compiler: /usr/bin/c++ - skipped \x01\x00\x00\x00\x00\x00\x00\"-- Detecting CXX compile features \x01\x00\x00\x00\x00\x00\x00)-- Detecting CXX compile features - done \x01\x00\x00\x00\x00\x00\x00�-- Using the single-header code from /app/workspace/e2e-demo-1767526209174/build/_deps/picotool-src/lib/nlohmann_json/single_include/ \x02\x00\x00\x00\x00\x00\x009PICOTOOL_NO_LIBUSB is set - no USB support will be built \x01\x00\x00\x00\x00\x00\x00\x14-- Configuring done \x01\x00\x00\x00\x00\x00\x00\x13-- Generating done \x01\x00\x00\x00\x00\x00\x00f-- Build files have been written to: /app/workspace/e2e-demo-1767526209174/build/_deps/picotool-build \x01\x00\x00\x00\x00\x00\x001[ 14%] Performing build step for 'picotoolBuild' \x01\x00\x00\x00\x00\x00\x00/-- The C compiler identification is GNU 12.2.0 \x01\x00\x00\x00\x00\x00\x001-- The CXX compiler identification is GNU 12.2.0 \x01\x00\x00\x00\x00\x00\x00*-- The ASM compiler identification is GNU \x01\x00\x00\x00\x00\x00\x00 -- Found assembler: /usr/bin/cc \x01\x00\x00\x00\x00\x00\x00!-- Detecting C compiler ABI info \x01\x00\x00\x00\x00\x00\x00(-- Detecting C compiler ABI info - done \x01\x00\x00\x00\x00\x00\x007-- Check for working C compiler: /usr/bin/cc - skipped \x01\x00\x00\x00\x00\x00\x00 -- Detecting C compile features \x01\x00\x00\x00\x00\x00\x00'-- Detecting C compile features - done \x01\x00\x00\x00\x00\x00\x00#-- Detecting CXX compiler ABI info \x01\x00\x00\x00\x00\x00\x00*-- Detecting CXX compiler ABI info - done \x01\x00\x00\x00\x00\x00\x00:-- Check for working CXX compiler: /usr/bin/c++ - skipped \x01\x00\x00\x00\x00\x00\x00\"-- Detecting CXX compile features \x01\x00\x00\x00\x00\x00\x00)-- Detecting CXX compile features - done \x02\x00\x00\x00\x00\x00\x00%Using precompiled enc_bootloader.elf \x01\x00\x00\x00\x00\x00\x00\x14-- Configuring done \x01\x00\x00\x00\x00\x00\x00\x13-- Generating done \x01\x00\x00\x00\x00\x00\x00u-- Build files have been written to: /app/workspace/e2e-demo-1767526209174/build/_deps/picotool-build/enc_bootloader \x01\x00\x00\x00\x00\x00\x00#[ 7%] Built target enc_bootloader \x01\x00\x00\x00\x00\x00\x00/-- The C compiler identification is GNU 12.2.0 \x01\x00\x00\x00\x00\x00\x001-- The CXX compiler identification is GNU 12.2.0 \x01\x00\x00\x00\x00\x00\x00*-- The ASM compiler identification is GNU \x01\x00\x00\x00\x00\x00\x00 -- Found assembler: /usr/bin/cc \x01\x00\x00\x00\x00\x00\x00!-- Detecting C compiler ABI info \x01\x00\x00\x00\x00\x00\x00(-- Detecting C compiler ABI info - done \x01\x00\x00\x00\x00\x00\x007-- Check for working C compiler: /usr/bin/cc - skipped \x01\x00\x00\x00\x00\x00\x00 -- Detecting C compile features \x01\x00\x00\x00\x00\x00\x00'-- Detecting C compile features - done \x01\x00\x00\x00\x00\x00\x00#-- Detecting CXX compiler ABI info \x01\x00\x00\x00\x00\x00\x00*-- Detecting CXX compiler ABI info - done \x01\x00\x00\x00\x00\x00\x00:-- Check for working CXX compiler: /usr/bin/c++ - skipped \x01\x00\x00\x00\x00\x00\x00\"-- Detecting CXX compile features \x01\x00\x00\x00\x00\x00\x00)-- Detecting CXX compile features - done \x02\x00\x00\x00\x00\x00\x00%Using precompiled enc_bootloader.elf \x01\x00\x00\x00\x00\x00\x00\x14-- Configuring done \x01\x00\x00\x00\x00\x00\x00\x13-- Generating done \x01\x00\x00\x00\x00\x00\x00}-- Build files have been written to: /app/workspace/e2e-demo-1767526209174/build/_deps/picotool-build/enc_bootloader_mbedtls \x01\x00\x00\x00\x00\x00\x00+[ 14%] Built target enc_bootloader_mbedtls \x01\x00\x00\x00\x00\x00\x00\x1b[ 16%] Built target errors \x01\x00\x00\x00\x00\x00\x00\x18[ 18%] Built target elf \x01\x00\x00\x00\x00\x00\x00\x1c[ 86%] Built target mbedtls \x01\x00\x00\x00\x00\x00\x00\x1c[ 88%] Built target bintool \x01\x00\x00\x00\x00\x00\x00,[ 90%] Built target embedded_data_no_libusb \x01\x00\x00\x00\x00\x00\x00\x1c[ 92%] Built target elf2uf2"
+  - generic [ref=e361]:
+    - alert
+    - alert
+```

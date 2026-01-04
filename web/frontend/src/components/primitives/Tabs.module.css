@@ -1,0 +1,42 @@
+.tabs {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.list {
+    display: inline-flex;
+    gap: 8px;
+    padding: 6px;
+    background: var(--color-surface-strong);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+}
+
+.tab {
+    padding: 8px 12px;
+    border-radius: var(--radius-sm);
+    border: 1px solid transparent;
+    color: var(--color-muted);
+    background: transparent;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 120ms ease;
+}
+
+.tab:hover {
+    color: var(--color-text);
+}
+
+.active {
+    color: var(--color-text);
+    border-color: var(--color-border);
+    background: rgba(125, 226, 255, 0.08);
+}
+
+.panel {
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    padding: 14px;
+    background: var(--color-surface);
+}

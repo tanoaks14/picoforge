@@ -1,0 +1,84 @@
+name: Build and Test
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: recursive
+    
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+    
+    - name: Build development image
+      run: docker-compose build pico-forge-dev
+    
+    - name: Run unit tests
+      run: |
+        docker-compose run --rm pico-forge-test /bin/bash -c \
+          "cd /workspace/pico-forge && \
+           mkdir -p build && cd build && \
+           cmake .. -DCMAKE_BUILD_TYPE=Debug && \
+           make -j$(nproc) && \
+           ./pico-forge-tests"
+    
+    - name: Run integration tests
+      run: |
+        docker-compose run --rm pico-forge-test /bin/bash -c \
+          "cd /workspace/pico-forge/build && \
+           ./pico-forge-integration-tests"
+    
+    - name: Upload test results
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: test-results
+        path: pico-forge/build/
+
+  lint:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Install dependencies
+      run: |
+        apt-get update
+        apt-get install -y clang-format clang-tidy
+    
+    - name: Check code formatting
+      run: |
+        find pico-forge/src -name "*.cpp" -o -name "*.h" | \
+        xargs clang-format --dry-run -i
+      continue-on-error: true
+    
+    - name: Static analysis
+      run: |
+        find pico-forge/src -name "*.cpp" | head -5 | \
+        xargs clang-tidy -checks=readability-* -- -Ipico-forge/src/
+      continue-on-error: true
+
+  build-docker:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+    
+    - name: Build production image
+      run: docker build -f docker/Dockerfile -t picoforge:latest .
+    
+    - name: Test production image
+      run: |
+        docker run --rm picoforge:latest pico-forge --version

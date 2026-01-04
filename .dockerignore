@@ -1,0 +1,43 @@
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# Build artifacts
+**/build/
+**/dist/
+**/.cmake/
+**/CMakeFiles/
+**/CMakeCache.txt
+*.o
+*.a
+*.so
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+*.sublime-*
+
+# Documentation (keep essential)
+.planning/
+docs/
+
+# OS
+.DS_Store
+Thumbs.db
+*.log
+
+# Docker
+.dockerignore
+Dockerfile*
+docker-compose*.yml
+
+# Workspace projects
+workspace/
+
+# Node modules (for future phases)
+**/node_modules/
+**/package-lock.json
